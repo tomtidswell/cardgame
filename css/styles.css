@@ -1,12 +1,10 @@
 body {
-  text-align: center;
-  margin: 0;
-  font-family: "Raleway", sans-serif;
   display: flex;
   flex-direction: column;
+  margin: 0;
+  font-family: "Raleway", sans-serif;
   min-height: 100vh;
   color: #ffffff;
-  
 }
 
 a{
@@ -24,6 +22,7 @@ a:hover{
 }
 
 header{
+  text-align: center;
   display: flex;
   flex-direction: column;
   background-color: #0D2C40;
@@ -35,6 +34,7 @@ main{
   flex-grow: 1;
   background-image: linear-gradient(160deg, #13547a 0%, #80d0c7 100%);
   justify-content: space-around;
+  overflow: hidden;
 }
 
 footer{
@@ -91,8 +91,31 @@ button{
   justify-content: space-around;
   min-height: 160px;
 }
+
+.hand-holder{
+  display: flex;
+  justify-content: center;
+}
+.play-indicator{
+  min-width: 120px;
+  opacity: 0;
+  transition: all 1s;
+  display: flex;
+  align-items: center;
+}
+.play-indicator.active{
+  min-width: 120px;
+  opacity: 1;
+}
+
+
+#p1-hand{
+  min-height: 144px;
+  z-index: 2;
+}
 #p2-hand{
-  transform: scale(0.7)
+  min-height: 144px;
+  transform: scale(0.7);
 }
 
 
@@ -103,13 +126,18 @@ button{
 }
 
 .pile .card{
-  margin-right: -95px;
+  margin-right: -45px;
+  margin-left: -45px;
   margin-top: -139px;
-  transform: rotateX(50deg) rotate(70deg);
+  transform: rotateX(50deg) rotateY(180deg) rotateZ(-70deg);
+}
+.pile .card.deal-p1{
+  animation: deal-p1 3s 1;
 }
 
 .hand .card{
-  margin-right: -80px;
+  margin-right: -40px;
+  margin-left: -40px;
 }
 
 
@@ -159,5 +187,23 @@ button{
   }
   img{
     height:160px;
+  }
+}
+
+
+@keyframes deal-p1 {
+  0% {  
+    transform: rotateX(50deg) rotateY(180deg) rotateZ(-70deg);
+  }
+  30%{  
+    transform: rotateX(180deg) rotateY(180deg) rotateZ(-0deg) translateX(-25vw) translateY(-10vh);
+  }
+  45%{  
+    transform: rotateX(180deg) rotateY(180deg) rotateZ(0deg) translateX(-25vw) translateY(-18vh);
+    opacity: 1; 
+  }
+  100%{ 
+    transform: rotateX(180deg) rotateY(180deg) rotateZ(0deg) translateX(-25vw) translateY(-30vh);
+    opacity: 0;
   }
 }

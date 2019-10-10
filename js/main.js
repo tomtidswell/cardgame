@@ -1,14 +1,6 @@
-
 const url = './img/cards/'
-var cardsInPlay = []
-var cardsMatched = []
-var randomisedCards = []
-var gameBoard = document.getElementById('game-board')
 var gameMessage = document.getElementById('game-message')
-var gameScore = document.getElementById('game-score')
-var gameBestScore = document.getElementById('game-best-score')
-var totalFlips = 0
-var bestScore = 100
+
 
 const cards = {
   p1: [],
@@ -28,10 +20,14 @@ const cardElements = {
   discarded: document.getElementById('discarded')
 }
 
+
+
 suits.forEach((suit, indexSuit) => ranks.forEach((rank, indexRank) => deck.push({
   name: `${rank}${suit}`,
   source: `${url}${rank}${suit}.svg`,
+  visible: false,
   value: rank,
+  runValue: indexRank,
   sortValue: indexSuit * 20 + (indexRank + 1),
   suit
 })))
@@ -53,10 +49,117 @@ function resetBoard(){
   cardElements.stack.innerHTML = ''
   shuffle(deck)
   deal()
-  console.log('full deck', deck.map(card => card.name))
+  console.log('full deck', deck.map(card => card.name), deck)
+}
+
+function orchGame(){
+  resetBoard()
+  shthead.endTurn()
+}
+
+class Game {
+  constructor(data){
+    this.player = 'p2'
+    this.series = []
+    this.seriesType = null
+    this.indicators = {
+      p1: document.querySelector('.p1-indicator'),
+      p2: document.querySelector('.p2-indicator')
+    }
+    console.log(data)
+  }
+  updateText(newText) {
+    gameMessage.innerHTML = newText
+    gameMessage.classList.add('show')
+    setTimeout(() => gameMessage.classList.remove('show'), 2000)
+  }
+  endTurn(){
+    //remove the play indicator
+    this.indicators[this.player].classList.remove('active')
+    //switch player
+    this.player = this.player === 'p1' ? this.player = 'p2' : this.player = 'p1'
+    //set the new player indicator
+    this.indicators[this.player].classList.add('active')
+    //clear the player's series
+    this.series = []
+    this.seriesType = null
+  }
+  handleClickStack(el) {    
+    //check if it is the players turn
+    if(this.player !== 'p1') return
+
+    el.classList.add('deal-p1')
+
+    setTimeout(() => {
+      el.setAttribute('src', `${url}${el.dataset.card}.svg`)
+    }, 200)
+
+    setTimeout(() => {
+      const card = cards.stack.pop()
+      cards.p1.push(card)
+      refreshDom('p1', { visible: true })
+      refreshDom('stack')
+    }, 2000)
+  }
+  handleClickHand(collection, cardName) {
+    //fetch the card data 
+    const cardData = cards[collection].filter(item => item.name === cardName)[0]
+    
+    //block play if card is not allowed
+    if(!this.cardAllowed(cardData)) return
+
+    this.series.unshift(cardData)
+    console.log(this.series)
+    //add the item which matches to the discard pile
+    cards.discarded.push(cardData)
+    //remove it from the hand
+    cards[collection] = cards[collection].filter(item => item.name !== cardName)
+    //update the DOM
+    refreshDom(collection, { visible: true })
+    refreshDom('discarded', { visible: true, shape: 'mess' })
+  }
+  cardAllowed(card){
+    //if there were no previous plays, allow play
+    if(!this.series.length) return true
+    
+    //logic for determining the start of a series
+    if(!this.seriesType){
+      //if the cards are the same value then type is 'set'
+      if(is.set(this.series[0], card)) this.seriesType = 'set' 
+      //if the cards are consecutive then the type is 'run'
+      if(is.run(this.series[0], card)) this.seriesType = 'run'
+      //if we succesfully set a seriesType then allow the card
+      return this.seriesType ? true : false
+    }
+
+    //check to make sure the series is continuing as it should
+    return is[this.seriesType](this.series[0], card) ? true : false
+  }
+}
+
+//define the 'is' object which contains the assessor functions
+const is = {
+  //function to define a set
+  set: function (a, b) {
+    return a.value === b.value
+  },
+  //function to define a run
+  run: function (a, b) {
+    //not a run if they are not the same suit
+    if (a.suit !== b.suit) return false
+    //assess the index value of the rank, and see if they are consecutive
+    if (a.runValue === b.runValue + 1) return true
+    if (a.runValue === b.runValue - 1) return true
+    //allow a run to travel from two to ace and vice versa
+    if (a.runValue === 0 && b.runValue === 12) return true
+    if (a.runValue === 12 && b.runValue === 0) return true
+    return false
+  }
 }
 
 
+
+const shthead = new Game('hello')
 
 function addElToParent(data, parentEl, layoutRules) {
   const el = document.createElement('img')
@@ -64,7 +167,7 @@ function addElToParent(data, parentEl, layoutRules) {
   el.setAttribute('data-card', data.name)
   
   //additional layout options
-  layoutRules.visible ? el.setAttribute('src', data.source) : el.setAttribute('src', `${url}BACK.svg`)
+  data.visible ? el.setAttribute('src', data.source) : el.setAttribute('src', `${url}BACK.svg`)
   if (layoutRules.mess) el.style.transform = `rotateX(50deg) rotate(${data.mess}deg)`
 
   //append the resulting element
@@ -81,9 +184,16 @@ function refreshDom(collectionName, layoutRules = {}) {
   //pre DOM update formatting rules
   switch (collectionName) {
     case 'p1':
-      refreshHandClick('p1') //adds an event listener to the top card
+      //adds an event listener to the top card
+      refreshHandClick('p1') 
+      // sort the hand into suits
       cards[collectionName].sort((a, b) => a.sortValue - b.sortValue)
+      // make sure the cards are visible
+      cards[collectionName].forEach(card => card.visible = true)
       break
+    case 'discarded':
+      // make sure the cards are visible
+      cards[collectionName].forEach(card => card.visible = true)
   }
 
   //identify data array and dom parent elements
@@ -103,16 +213,16 @@ function refreshDom(collectionName, layoutRules = {}) {
 }
 
 function refreshStackClick(){
-  if(!cardElements.stack.children.length) return null
-  cardElements.stack.children[cardElements.stack.children.length - 1]
-    .addEventListener('click',handleClickStack)
+  const stackChildren = cardElements.stack.children
+  if(!stackChildren.length) return null
+  stackChildren[stackChildren.length - 1]
+    .addEventListener('click', ()=>shthead.handleClickStack(stackChildren[stackChildren.length - 1]))
 }
 
 function refreshHandClick(elementName){
   // if (!cardElements[elementName].children.length) return null
   for (const el of cardElements[elementName].children) {
-    el.addEventListener('click', () => 
-      handleClickHand(elementName, el.attributes['data-card'].value))
+    el.addEventListener('click', () => shthead.handleClickHand(elementName, el.dataset.card))
   }  
 }
 
@@ -127,40 +237,19 @@ function deal(){
   cards.discarded.push(tempDeck.shift())
   //add the rest of the cards to the stack
   while (tempDeck.length) {
-    cards.stack.push(tempDeck.shift())
+    cards.stack.unshift(tempDeck.shift())
   }
 
-  refreshDom('p1', { visible: true, shape: 'fan', total: cards.p1.length })
+  refreshDom('p1', { shape: 'fan', total: cards.p1.length })
   refreshDom('p2')
-  refreshDom('discarded', { visible: true, shape: 'mess' })
+  refreshDom('discarded', { shape: 'mess' })
   refreshDom('stack')
   
 }
 
-function handleClickStack(){
-  console.log('stack clicked')
-  cards.p1.push(cards.stack.shift())
-  refreshDom('p1', { visible: true })
-  refreshDom('stack')
-}
 
-function handleClickHand(collection, card){
-  //add the item which matches to the discard pile
-  cards.discarded.push(cards[collection].filter(item => item.name === card)[0])
-  //remove it from the hand
-  cards[collection] = cards[collection].filter(item => item.name !== card)
-  //update the DOM
-  refreshDom(collection, { visible: true })
-  refreshDom('discarded', { visible: true, shape: 'mess' })
-}
 
-function updateText(newText){
-  gameMessage.innerHTML = newText
-  gameMessage.classList.add('show')
-  setTimeout(()=>gameMessage.classList.remove('show'), 2000)
-}
-
-document.addEventListener('DOMContentLoaded', resetBoard)
+document.addEventListener('DOMContentLoaded', orchGame)
 document.getElementById('reset-button').addEventListener('click', resetBoard)
 document.getElementById('shuffle-button').addEventListener('click', ()=>{
   shuffle(cards.stack)
