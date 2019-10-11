@@ -20,17 +20,28 @@ const cardElements = {
   discarded: document.getElementById('discarded')
 }
 
+function generateDeck(){
+  suits.forEach((suit, indexSuit) => ranks.forEach((rank, indexRank) => {
+    const card = {
+      name: `${rank}${suit}`,
+      source: `${url}${rank}${suit}.svg`,
+      visible: false,
+      value: rank,
+      runValue: indexRank,
+      sortValue: indexSuit * 20 + (indexRank + 1),
+      suit,
+      parentEl: cardElements.stack
+    }
+    deck.push(card)
+  }))
+  //give them a shuffle
+  // shuffle(deck)
+  //finally generate the cards on screen
+  deck.forEach(card=>{
+    card.el = createEl(card, card.parentEl)
+  })
+}
 
-
-suits.forEach((suit, indexSuit) => ranks.forEach((rank, indexRank) => deck.push({
-  name: `${rank}${suit}`,
-  source: `${url}${rank}${suit}.svg`,
-  visible: false,
-  value: rank,
-  runValue: indexRank,
-  sortValue: indexSuit * 20 + (indexRank + 1),
-  suit
-})))
 
 const shuffle = (collection) => {
   collection.forEach(item => item.shuffle = Math.random().toFixed(4))
@@ -47,8 +58,9 @@ function resetBoard(){
   cardElements.p2.innerHTML = ''
   cardElements.discarded.innerHTML = ''
   cardElements.stack.innerHTML = ''
-  shuffle(deck)
-  deal()
+  generateDeck()
+  
+  // deal()
   console.log('full deck', deck.map(card => card.name), deck)
 }
 
@@ -266,29 +278,25 @@ document.getElementById('shuffle-button').addEventListener('click', ()=>{
 
 
 function addElToParent(data, parentEl, layoutRules) {
-  const el = createEl(data, layoutRules)
-  appendEl(el, parentEl)
+  createEl(data, parentEl, layoutRules)
 }
 
-function createEl(data, layoutRules) {
+function createEl(data, parentEl, layoutRules = {}) {
   const el = document.createElement('img')
   el.classList.add('card')
-  el.setAttribute('data-card', 'Special new element')
+  el.setAttribute('data-card', data.name)
   //additional layout options
   data.visible ? el.setAttribute('src', data.source) : el.setAttribute('src', `${url}BACK.svg`)
   if (layoutRules.mess) el.style.transform = `rotateX(50deg) rotate(${data.mess}deg)`
-  return el
-}
-
-function appendEl(el, parentEl) {
   //append the resulting element
   parentEl.appendChild(el)
   return el
 }
 
-function moveEl(el, newParentEl) {
-  //append the resulting element
-  newParentEl.appendChild(el)
+function appendEl(el, parentEl) {
+  //append (and moves if required) the resulting element
+  parentEl.appendChild(el)
   return el
 }
+
 
