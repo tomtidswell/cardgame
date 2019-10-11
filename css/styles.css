@@ -35,6 +35,7 @@ main{
   background-image: linear-gradient(160deg, #13547a 0%, #80d0c7 100%);
   justify-content: space-around;
   overflow: hidden;
+  /* min-height: 90vh; */
 }
 
 footer{
@@ -97,14 +98,15 @@ button{
   justify-content: center;
 }
 .play-indicator{
-  min-width: 120px;
   opacity: 0;
   transition: all 1s;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  padding: 10px;
 }
 .play-indicator.active{
-  min-width: 120px;
   opacity: 1;
 }
 
@@ -133,6 +135,11 @@ button{
 }
 .pile .card.deal-p1{
   animation: deal-p1 3s 1;
+}
+
+.hand{
+  padding-right: 40px;
+  padding-left: 40px;
 }
 
 .hand .card{

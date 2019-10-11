@@ -83,6 +83,10 @@ class Game {
     //clear the player's series
     this.series = []
     this.seriesType = null
+
+    //TODO replace this with real computer logic
+    if(this.player === 'p2') setTimeout(() => this.endTurn(), 2000)
+
   }
   handleClickStack(el) {    
     //check if it is the players turn
@@ -102,6 +106,9 @@ class Game {
     }, 2000)
   }
   handleClickHand(collection, cardName) {
+    //check if it is the players turn
+    if (this.player !== 'p1') return
+
     //fetch the card data 
     const cardData = cards[collection].filter(item => item.name === cardName)[0]
     
@@ -109,18 +116,23 @@ class Game {
     if(!this.cardAllowed(cardData)) return
 
     this.series.unshift(cardData)
-    console.log(this.series)
+
     //add the item which matches to the discard pile
     cards.discarded.push(cardData)
+    
     //remove it from the hand
     cards[collection] = cards[collection].filter(item => item.name !== cardName)
     //update the DOM
     refreshDom(collection, { visible: true })
     refreshDom('discarded', { visible: true, shape: 'mess' })
+
+    if(!cards[collection].length) console.log(collection, 'wins')
+    
+
   }
   cardAllowed(card){
-    //if there were no previous plays, allow play
-    if(!this.series.length) return true
+    //if there were no previous plays, only allow a valid move
+    if(!this.series.length) return is.allowedFirst(cards, card)
     
     //logic for determining the start of a series
     if(!this.seriesType){
@@ -154,25 +166,15 @@ const is = {
     if (a.runValue === 0 && b.runValue === 12) return true
     if (a.runValue === 12 && b.runValue === 0) return true
     return false
+  },
+  allowedFirst: function (a, b){
+    return true
   }
 }
 
 
 
 const shthead = new Game('hello')
-
-function addElToParent(data, parentEl, layoutRules) {
-  const el = document.createElement('img')
-  el.classList.add('card')
-  el.setAttribute('data-card', data.name)
-  
-  //additional layout options
-  data.visible ? el.setAttribute('src', data.source) : el.setAttribute('src', `${url}BACK.svg`)
-  if (layoutRules.mess) el.style.transform = `rotateX(50deg) rotate(${data.mess}deg)`
-
-  //append the resulting element
-  parentEl.appendChild(el)
-}
 
 function refreshDom(collectionName, layoutRules = {}) {
   //interpret the rules and add the appropriate flags
@@ -184,16 +186,23 @@ function refreshDom(collectionName, layoutRules = {}) {
   //pre DOM update formatting rules
   switch (collectionName) {
     case 'p1':
-      //adds an event listener to the top card
-      refreshHandClick('p1') 
       // sort the hand into suits
       cards[collectionName].sort((a, b) => a.sortValue - b.sortValue)
       // make sure the cards are visible
       cards[collectionName].forEach(card => card.visible = true)
       break
+    case 'p2':
+      // make sure the cards are not visible
+      cards[collectionName].forEach(card => card.visible = false)
+      break
     case 'discarded':
       // make sure the cards are visible
       cards[collectionName].forEach(card => card.visible = true)
+      break
+    case 'stack':
+      // make sure the cards are not visible
+      cards[collectionName].forEach(card => card.visible = false)
+      break
   }
 
   //identify data array and dom parent elements
@@ -247,11 +256,39 @@ function deal(){
   
 }
 
-
-
 document.addEventListener('DOMContentLoaded', orchGame)
+document.getElementById('end-button').addEventListener('click', ()=>shthead.endTurn())
 document.getElementById('reset-button').addEventListener('click', resetBoard)
 document.getElementById('shuffle-button').addEventListener('click', ()=>{
   shuffle(cards.stack)
   refreshDom('stack')
 })
+
+
+function addElToParent(data, parentEl, layoutRules) {
+  const el = createEl(data, layoutRules)
+  appendEl(el, parentEl)
+}
+
+function createEl(data, layoutRules) {
+  const el = document.createElement('img')
+  el.classList.add('card')
+  el.setAttribute('data-card', 'Special new element')
+  //additional layout options
+  data.visible ? el.setAttribute('src', data.source) : el.setAttribute('src', `${url}BACK.svg`)
+  if (layoutRules.mess) el.style.transform = `rotateX(50deg) rotate(${data.mess}deg)`
+  return el
+}
+
+function appendEl(el, parentEl) {
+  //append the resulting element
+  parentEl.appendChild(el)
+  return el
+}
+
+function moveEl(el, newParentEl) {
+  //append the resulting element
+  newParentEl.appendChild(el)
+  return el
+}
+
