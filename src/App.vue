@@ -148,6 +148,9 @@ export default {
   display: flex;
   flex-direction: column;
 }
+main{
+  
+}
 #table{
   display: flex;
   justify-content: space-around;

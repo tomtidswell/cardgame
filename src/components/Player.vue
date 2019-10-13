@@ -6,7 +6,7 @@
     </div>
     <div class="hand" v-if="player==='p1'" id="p1-hand">
       <PlayingCard v-for="(card, index) in cards" 
-        :key="index"
+        :key="card.name"
         :index="index"
         :card="card"
         :canBePlayed="canBePlayed(card)"
@@ -91,7 +91,7 @@ export default {
       // console.log('playing', cardData, this.hand)
       
       //emit the click and card back to the app
-      setTimeout(()=> this.$emit('handClick', cardData, index), 2000)
+      setTimeout(()=> this.$emit('handClick', cardData, index), 1300)
     },
     canBePlayed(card){
       //cant be played if it's not the players turn!
@@ -119,7 +119,6 @@ export default {
 #p1-hand{
   min-height: 144px;
   z-index: 2;
-  perspective: 29em;
 }
 #p2-hand{
   min-height: 144px;
@@ -144,17 +143,13 @@ export default {
 .hand{
   padding-right: 40px;
   padding-left: 40px;
-  display: flex;
-  
+  display: flex; 
 }
 .hand .card{
   margin-right: -40px;
   margin-left: -40px;
   transition: transform 0.3s;
   z-index: 2;
-}
-#p1-hand.hand .card:hover{
-  transform: translateY(-15px);
 }
 
 </style>
