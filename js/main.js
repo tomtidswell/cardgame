@@ -89,7 +89,7 @@ class Game {
     //remove the play indicator
     this.indicators[this.player].classList.remove('active')
     //switch player
-    this.player = this.player === 'p1' ? this.player = 'p2' : this.player = 'p1'
+    this.player = this.player === 'p1' ? 'p2' : 'p1'
     //set the new player indicator
     this.indicators[this.player].classList.add('active')
     //clear the player's series

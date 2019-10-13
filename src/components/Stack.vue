@@ -39,11 +39,13 @@ export default {
   // }
   methods: {
     emitStackClick(){
-      this.$emit('stackClick')
       this.animate = true
       setTimeout(()=> this.flip=true, 200)
-      setTimeout(()=> {this.flip=false; this.animate=false}, 2000)
-      
+      setTimeout(()=> {
+        this.flip=false
+        this.animate=false
+        this.$emit('stackClick')
+      }, 2000)
     }
   }
 }

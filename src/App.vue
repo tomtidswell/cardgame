@@ -12,12 +12,18 @@
     </header>
 
     <main>
-      <Player player='p2' :cards="cards.p2"/>
+      <Player player='p2' 
+        :cards="cards.p2" 
+        :turn="this.player==='p2'" />
       <div id="table">
         <Stack :cards="cards.stack" @stackClick="this.handleStackClick"/>
         <Discarded :cards="cards.discarded"/>
       </div>
-      <Player player='p1' :cards="cards.p1"/>
+      <Player player='p1' 
+        :cards="cards.p1" 
+        :turn="this.player==='p1'" 
+        @turnEnd="handleTurnEnd"
+        @handClick="this.handleHandClick"/>
     </main>
           
     <Message :msg="msg"/>
@@ -36,6 +42,7 @@ import Player from './components/Player.vue'
 import Message from './components/Message.vue'
 import Stack from './components/Stack.vue'
 import Discarded from './components/Discarded.vue'
+// import Card from './components/Card.vue'
 
 export default {
   name: 'app',
@@ -43,7 +50,8 @@ export default {
   data: function () {
     return {
       msg: 'Hello',
-      url: './img/cards/',
+      player: 'p1',
+      url: './assets/img/cards',
       // deck: [],
       // cards: ['2','3','4','5'],
       ranks: [2,3,4,5,6,7,8,9,10,'J','Q','K','A'],
@@ -60,23 +68,6 @@ export default {
   methods: {
     greet: function (greeting) {
       console.log('hello', this.deck)
-    },
-    buildDeck: function () {
-      const all = []
-      this.suits.forEach((suit, indexSuit) => this.ranks.forEach((rank, indexRank) => {
-        const card = {
-          name: `${rank}${suit}`,
-          source: `./${this.url}${rank}${suit}.svg`,
-          sourceBack: `./${this.url}BACK.svg`,
-          visible: false,
-          value: rank,
-          runValue: indexRank,
-          sortValue: indexSuit * 20 + (indexRank + 1),
-          suit
-        }
-        all.push(card)
-      }))
-      return this.shuffle(all)
     },
     shuffle: (collection) => {
       collection.forEach(item => item.shuffle = Math.random().toFixed(4))
@@ -98,9 +89,25 @@ export default {
         this.cards.stack.unshift(tempDeck.shift())
       }
     },
+    handleTurnEnd(){
+      //switch player
+      this.player = this.player === 'p1' ? 'p2' : 'p1'
+      //TODO replace this with real computer logic
+      if(this.player === 'p2') setTimeout(() => this.handleTurnEnd(), 2000)
+    },
     handleStackClick(){
       console.log('stack clicked')
-      setTimeout(()=> this.cards.p1.push(this.cards.stack.pop()), 2000)
+      this.cards.p1.push(this.cards.stack.pop())
+    },
+    handleHandClick(cardPlayed, indexOfCard){
+      //add the card to the discard pile
+      this.cards.discarded.push(cardPlayed)
+      //remove it from the hand
+      this.cards[this.player].splice(indexOfCard,1)
+      console.log(indexOfCard)
+      
+      //check for a win
+      if(!this.cards[this.player].length) console.log(this.player, 'wins')
     }
   },
   computed: {
@@ -109,8 +116,8 @@ export default {
       this.suits.forEach((suit, indexSuit) => this.ranks.forEach((rank, indexRank) => {
         const card = {
           name: `${rank}${suit}`,
-          source: `./${this.url}${rank}${suit}.svg`,
-          sourceBack: `./${this.url}BACK.svg`,
+          source: require(`${this.url}/${rank}${suit}.svg`),
+          sourceBack: require(`${this.url}/BACK.svg`),
           visible: false,
           value: rank,
           runValue: indexRank,
@@ -145,5 +152,6 @@ export default {
   display: flex;
   justify-content: space-around;
   min-height: 160px;
+  perspective: 29em;
 }
 </style>
