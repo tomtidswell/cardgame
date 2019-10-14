@@ -1,23 +1,20 @@
 <template>
-  <div class="stack-wrapper">
-    <h2>{{message}}</h2>
-    <div class="pile" id="stack">
-      <template v-for="(card, index) in cards">
-        <!-- event listener for the final item -->
-        <img 
-          class="card"
-          :class="{ 'deal-p1': animate, 'deal-p2': card.deal === 'p2' }"
-          v-if="index===cards.length-1" 
-          :key="card.name" 
-          :src="flip ? card.source : card.sourceBack"
-          v-on:click="emitStackClick"
-          :data-card="card.name" />
+  <div class="stack">
+    <template v-for="(card, index) in cards">
+      <!-- event listener for the final item -->
+      <img 
+        class="card"
+        :class="{ 'deal-p1': animate, 'deal-p2': card.deal === 'p2' }"
+        v-if="index===cards.length-1" 
+        :key="card.name" 
+        :src="flip ? card.source : card.sourceBack"
+        v-on:click="emitStackClick"
+        :data-card="card.name" />
 
-        <img :key="index" v-else :src="card.sourceBack" :data-card="card.name" class="card" />
-        <!-- <p>{{card.name}}</p>
-        <p>{{index}}</p> -->
-      </template>
-    </div>
+      <img :key="index" v-else :src="card.sourceBack" :data-card="card.name" class="card" />
+      <!-- <p>{{card.name}}</p>
+      <p>{{index}}</p> -->
+    </template>
   </div>
 </template>
 
@@ -72,26 +69,18 @@ h2{
   position: absolute;
   text-align: center;
 }
-.stack-wrapper{
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-}
-.pile{
+.stack{
   display: flex;
   flex-direction: column-reverse;
   perspective: 29em;
   position: relative;
-  margin-top: 100px;
 }
-.pile .card{
-  margin-right: -44px;
-  margin-left: -44px;
-  margin-top: -119px;
-  transform: rotateX(50deg) rotateY(180deg) rotateZ(-70deg);
+.stack .card{
+  margin-top: -59px;
+  margin-bottom: -59px;
+  transform: rotateX(40deg) rotateY(180deg) rotateZ(-60deg);
 }
-.pile .card.deal-p1{
+.stack .card.deal-p1{
   animation: deal-p1 3s 1;
 }
 @keyframes deal-p1 {

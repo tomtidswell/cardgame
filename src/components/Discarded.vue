@@ -1,9 +1,9 @@
 <template>
-  <div class="pile" id="discarded">
+  <div class="discarded">
     <img v-for="(card, index) in cards" 
       :key="index" 
       :src="card.source" 
-      :style="{ transform: `rotateX(50deg) rotate(${card.mess}deg)`}"
+      :style="{ transform: `rotateX(30deg) rotate(${card.mess}deg)`}"
       class="card" />
   </div>
 </template>
@@ -32,6 +32,13 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
-
+.discarded{
+  display: flex;
+  flex-direction: column-reverse;
+  position: relative;
+}
+.discarded .card{
+  margin: -60px -29px;
+}
 
 </style>

@@ -2,12 +2,12 @@
   <img v-if="computer"
     class="card"
     :data-card="card.name"
-    :src="card.sourceBack" />
+    :src="face ? card.source : card.sourceBack" />
   <img v-else
     v-on:click="emitCardClick(index)"
     class="card"
     :data-card="card.name"
-    :src="card.source"
+    :src="face ? card.source : card.sourceBack"
     :class="{ throw: animate, allowed: canBePlayed }" />
 </template>
 
@@ -19,7 +19,8 @@ export default {
     index: Number,
     card: Object,
     canBePlayed: Boolean,
-    computer: Boolean
+    computer: Boolean,
+    face: Boolean
   },
   data: function () {
     return {

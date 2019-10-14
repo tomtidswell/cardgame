@@ -7,18 +7,23 @@
 
     <main>
       <Player player='p2' 
-        :cards="cards.p2" 
+        :cards="cards.p2.hand" 
         :active="this.player==='p2'"
         :topDiscarded="this.cards.discarded[this.cards.discarded.length-1]" />
+      <Piles
+        :piles="cards.p2.piles" />
       <div id="table">
         <Stack 
           @stackClick="this.handleStackClick"
           :turn="turn"
           :cards="cards.stack" />
+        <h2>{{msg}}</h2>
         <Discarded :cards="cards.discarded"/>
       </div>
+      <Piles
+        :piles="cards.p1.piles" />
       <Player player='p1' 
-        :cards="cards.p1" 
+        :cards="cards.p1.hand" 
         :active="this.player==='p1'"
         :turn="turn"
         :canEndTurn="canEndTurn"
@@ -47,13 +52,14 @@ import Player from './components/Player.vue'
 import Message from './components/Message.vue'
 import Stack from './components/Stack.vue'
 import Discarded from './components/Discarded.vue'
+import Piles from './components/Piles.vue'
 
 //helper functions
 import is from './lib/is'
 
 export default {
   name: 'app',
-  components: { HelloWorld, Player, Message, Discarded, Stack },
+  components: { HelloWorld, Player, Message, Discarded, Stack, Piles },
   data: function () {
     return {
       msg: 'Hello',
@@ -68,8 +74,8 @@ export default {
         seriesType: null
       },
       cards: {
-        p1: [],
-        p2: [],
+        p1: { hand: [], piles: { facedown: [], faceup: [] } },
+        p2: { hand: [], piles: { facedown: [], faceup: [] } },
         stack: [],
         discarded: []
       }
@@ -87,9 +93,17 @@ export default {
       const tempDeck = this.deck.map(card => card)
       console.log('Dealing:',tempDeck.map(card=>card.name))
       //update this with non-hardcoded values
-      for (let index = 0; index < 7; index++) {
-        this.cards.p1.push(tempDeck.shift())
-        this.cards.p2.push(tempDeck.shift())
+      for (let index = 0; index < 3; index++) {
+        this.cards.p1.piles.facedown.push(tempDeck.shift())
+        this.cards.p2.piles.facedown.push(tempDeck.shift())
+      }
+      for (let index = 0; index < 3; index++) {
+        this.cards.p1.piles.faceup.push(tempDeck.shift())
+        this.cards.p2.piles.faceup.push(tempDeck.shift())
+      }
+      for (let index = 0; index < 10; index++) {
+        this.cards.p1.hand.push(tempDeck.shift())
+        this.cards.p2.hand.push(tempDeck.shift())
       }
       this.cards.discarded.push(tempDeck.shift())
       //add the rest of the cards to the stack
@@ -121,8 +135,8 @@ export default {
     handleStackClick(){
       this.turn.pickCount++
       console.log('picked:', this.turn.pickCount)
-      this.cards.p1.push(this.cards.stack.pop())
-      this.cards.p1.sort((a, b) => a.sortValue - b.sortValue)
+      this.cards.p1.hand.push(this.cards.stack.pop())
+      this.cards.p1.hand.sort((a, b) => a.sortValue - b.sortValue)
     },
     handleHandClick(cardPlayed, indexOfCard){
       //add it to the series of cards which have been played
@@ -140,20 +154,20 @@ export default {
       //add the card to the discard pile
       this.cards.discarded.push(cardPlayed)
       //remove it from the hand
-      this.cards[this.player].splice(indexOfCard,1)
+      this.cards.p1.hand.splice(indexOfCard,1)
       //check for a win
-      if(!this.cards[this.player].length) console.log(this.player, 'wins')
+      if(!this.cards.p1.hand.length) console.log(this.player, 'wins')
     },
     handleComputerTurn(){
       //prevent automating the human's turn!
       if(this.player === 'p1') return
 
       const topDiscarded = this.cards.discarded[this.cards.discarded.length-1]
-      const playableCards = this.cards[this.player].filter(card=>is.validMove(card, this.turn, topDiscarded))
-      const firstIndexPlayable = this.cards[this.player].indexOf(playableCards[0])
+      const playableCards = this.cards[this.player].hand.filter(card=>is.validMove(card, this.turn, topDiscarded))
+      const firstIndexPlayable = this.cards[this.player].hand.indexOf(playableCards[0])
       // const firstPlayable = playableCards[0]
       //output the comp cards
-      console.log('Cards', this.cards[this.player].map(card=>card.name), playableCards, firstIndexPlayable)
+      console.log('Cards', this.cards[this.player].hand.map(card=>card.name), playableCards, firstIndexPlayable)
       console.log('Playable cards:', playableCards, firstIndexPlayable)
       console.log('Penalty and pick', this.turn.penalty)
       
@@ -161,14 +175,14 @@ export default {
       //if there are no playable cards, and no penalty, pick up a card
       if(playableCards.length === 0 && !this.turn.penalty) {
         console.log('attempting to pick single card')
-        this.cards[this.player].push(this.cards.stack.pop())
+        this.cards[this.player].hand.push(this.cards.stack.pop())
       }
       
       //if there are no playable cards and a penalty, pick the number of cards from the penalty
       else if (playableCards.length === 0 && this.turn.penalty){
         console.log('attempting to pick up cards')
         while (this.turn.penalty.pick) {
-          this.cards[this.player].push(this.cards.stack.pop())
+          this.cards[this.player].hand.push(this.cards.stack.pop())
           this.turn.penalty.pick--
         }
       }
@@ -177,12 +191,12 @@ export default {
       else {
         console.log('attempting to play a card')
         //add the card to the discard pile
-        this.cards.discarded.push(this.cards[this.player][firstIndexPlayable])
+        this.cards.discarded.push(this.cards[this.player].hand[firstIndexPlayable])
         //remove it from the hand
-        this.cards[this.player].splice(firstIndexPlayable,1)
+        this.cards[this.player].hand.splice(firstIndexPlayable,1)
       } 
 
-      console.log('results in:', this.cards.discarded, this.cards[this.player] )
+      console.log('results in:', this.cards.discarded, this.cards[this.player].hand )
       
       this.handleTurnEnd()
     }
@@ -209,7 +223,7 @@ export default {
   },
   created: function () {
     this.deal()
-    this.cards.p1.sort((a, b) => a.sortValue - b.sortValue)
+    this.cards.p1.hand.sort((a, b) => a.sortValue - b.sortValue)
   }
   
 }
@@ -226,13 +240,17 @@ export default {
   flex-direction: column;
 }
 main{
-  
+  perspective: 50em;
+}
+h2{
+  min-height: 100px;
 }
 #table{
+  transform: rotateX(30deg) rotateY(0deg) rotateZ(0deg);
+  position: relative;
   display: flex;
-  justify-content: space-around;
-  min-height: 160px;
-  perspective: 29em;
+  align-items: center;
+  justify-content: space-evenly;
 }
 .card{
   height:120px;

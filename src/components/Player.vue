@@ -11,7 +11,8 @@
         :card="card"
         :index="index"
         :canBePlayed="canBePlayed(card)"
-        @cardClick="emitHandClick" />
+        @cardClick="emitHandClick" 
+        face />
     </div>
     <div class="hand" v-if="player==='p2'" id="p2-hand">
       <PlayingCard v-for="(card, index) in cards" 
@@ -89,13 +90,14 @@ export default {
   z-index: 2;
 }
 #p2-hand{
-  min-height: 144px;
+  min-height: 80px;
   transform: scale(0.7);
 }
 
 .hand-holder{
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 .play-indicator{
   opacity: 0;
@@ -104,7 +106,6 @@ export default {
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  padding: 10px;
 }
 .play-indicator.active{
   opacity: 1;
