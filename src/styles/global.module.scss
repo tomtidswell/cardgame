@@ -73,7 +73,11 @@ button{
   font-weight: 400;
   color: white;
   background-color: #e4646c;
-  margin: 10px;
+}
+button:disabled{
+  border: 2px solid #cecece;
+  color: white;
+  background-color: #dfb7ba;
 }
 
 .score-table{
@@ -83,13 +87,5 @@ button{
   font-weight: 400;
 }
 
-.card{
-  height:140px;
-}
 
-.pile{
-  display: flex;
-  flex-direction: column-reverse;
-  perspective: 29em;
-}
 

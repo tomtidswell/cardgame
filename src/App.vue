@@ -3,25 +3,26 @@
 
     <header>
       <h1>Sh*thead</h1>
-      <div class="score-table">
-        <button id="reset-button">Reset</button>
-        <button id="shuffle-button">Shuffle</button>
-        Score: <span id="game-score">0</span>
-        Best: <span id="game-best-score">0</span>
-      </div>
     </header>
 
     <main>
       <Player player='p2' 
         :cards="cards.p2" 
-        :turn="this.player==='p2'" />
+        :active="this.player==='p2'"
+        :topDiscarded="this.cards.discarded[this.cards.discarded.length-1]" />
       <div id="table">
-        <Stack :cards="cards.stack" @stackClick="this.handleStackClick"/>
+        <Stack 
+          @stackClick="this.handleStackClick"
+          :turn="turn"
+          :cards="cards.stack" />
         <Discarded :cards="cards.discarded"/>
       </div>
       <Player player='p1' 
         :cards="cards.p1" 
-        :turn="this.player==='p1'" 
+        :active="this.player==='p1'"
+        :turn="turn"
+        :canEndTurn="canEndTurn"
+        :topDiscarded="this.cards.discarded[this.cards.discarded.length-1]"
         @turnEnd="handleTurnEnd"
         @handClick="this.handleHandClick"/>
     </main>
@@ -29,20 +30,26 @@
     <Message :msg="msg"/>
 
     <footer>
-      <p class="copyright">Copyright &copy; 2019</p>
-      <p class="message">Created with &hearts; by <span class="name">Tom Tidswell</span></p>
+      <p class="copyright"><span class="name">Tom Tidswell</span> &copy; 2019 &hearts;</p>
+      <div class="score-table">
+        <button id="reset-button">Reset</button>
+        <button id="shuffle-button">Shuffle</button>
+      </div>
     </footer>
 
   </div>
 </template>
 
 <script>
+//components
 import HelloWorld from './components/HelloWorld.vue'
 import Player from './components/Player.vue'
 import Message from './components/Message.vue'
 import Stack from './components/Stack.vue'
 import Discarded from './components/Discarded.vue'
-// import Card from './components/Card.vue'
+
+//helper functions
+import is from './lib/is'
 
 export default {
   name: 'app',
@@ -52,10 +59,14 @@ export default {
       msg: 'Hello',
       player: 'p1',
       url: './assets/img/cards',
-      // deck: [],
-      // cards: ['2','3','4','5'],
-      ranks: [2,3,4,5,6,7,8,9,10,'J','Q','K','A'],
+      ranks: ['2','3','4','5','6','7','8','9','10','J','Q','K','ACE'],
       suits: ['H','C','D','S'],
+      turn: {
+        pickCount: 0,
+        penalty: null,
+        series: [],
+        seriesType: null
+      },
       cards: {
         p1: [],
         p2: [],
@@ -66,9 +77,6 @@ export default {
     }
   },
   methods: {
-    greet: function (greeting) {
-      console.log('hello', this.deck)
-    },
     shuffle: (collection) => {
       collection.forEach(item => item.shuffle = Math.random().toFixed(4))
       collection.forEach(item => item.mess = ((Math.random() - 0.5) * 90).toFixed(2))
@@ -88,33 +96,101 @@ export default {
       while (tempDeck.length) {
         this.cards.stack.unshift(tempDeck.shift())
       }
+      //understand if the card results in a penalty on the first turn
+      this.turn.penalty = is.penaltyDue(this.cards.discarded)
+      console.log('Dealt:',this.cards.discarded[this.cards.discarded.length-1].name, 'penalty:', this.turn.penalty)
     },
     handleTurnEnd(){
+      const topDiscarded = this.cards.discarded[this.cards.discarded.length-1]
+      
       //switch player
       this.player = this.player === 'p1' ? 'p2' : 'p1'
-      //TODO replace this with real computer logic
-      if(this.player === 'p2') setTimeout(() => this.handleTurnEnd(), 2000)
+
+      //update the turn data
+      this.turn.penalty = is.penaltyDue(this.cards.discarded, this.turn.penalty)
+      this.turn.pickCount = 0
+      this.turn.series = []
+      this.turn.seriesType = null
+
+      console.log('Played:', topDiscarded.name, 'penalty:', this.turn.penalty)
+
+      //begin the computer player's turn
+      setTimeout(() => this.handleComputerTurn(), 1000)
+      
     },
     handleStackClick(){
-      console.log('stack clicked')
+      this.turn.pickCount++
+      console.log('picked:', this.turn.pickCount)
       this.cards.p1.push(this.cards.stack.pop())
+      this.cards.p1.sort((a, b) => a.sortValue - b.sortValue)
     },
     handleHandClick(cardPlayed, indexOfCard){
+      //add it to the series of cards which have been played
+      this.turn.series.unshift(cardPlayed)
+
+      //set the start of a series (if no series type is set yet, and this is the second card)
+      if(!this.turn.seriesType && this.turn.series.length === 2){
+        //if the cards are the same value then type is 'set'
+        if(is.set(this.turn.series[1], cardPlayed)) this.turn.seriesType = 'set' 
+        //if the cards are consecutive then the type is 'run'
+        if(is.run(this.turn.series[1], cardPlayed)) this.turn.seriesType = 'run'
+      }
+      // console.log('playing', cardData, this.hand)
+      
       //add the card to the discard pile
       this.cards.discarded.push(cardPlayed)
       //remove it from the hand
       this.cards[this.player].splice(indexOfCard,1)
-      console.log(indexOfCard)
-      
       //check for a win
       if(!this.cards[this.player].length) console.log(this.player, 'wins')
+    },
+    handleComputerTurn(){
+      //prevent automating the human's turn!
+      if(this.player === 'p1') return
+
+      const topDiscarded = this.cards.discarded[this.cards.discarded.length-1]
+      const playableCards = this.cards[this.player].filter(card=>is.validMove(card, this.turn, topDiscarded))
+      const firstIndexPlayable = this.cards[this.player].indexOf(playableCards[0])
+      // const firstPlayable = playableCards[0]
+      //output the comp cards
+      console.log('Cards', this.cards[this.player].map(card=>card.name), playableCards, firstIndexPlayable)
+      console.log('Playable cards:', playableCards, firstIndexPlayable)
+      console.log('Penalty and pick', this.turn.penalty)
+      
+
+      //if there are no playable cards, and no penalty, pick up a card
+      if(playableCards.length === 0 && !this.turn.penalty) {
+        console.log('attempting to pick single card')
+        this.cards[this.player].push(this.cards.stack.pop())
+      }
+      
+      //if there are no playable cards and a penalty, pick the number of cards from the penalty
+      else if (playableCards.length === 0 && this.turn.penalty){
+        console.log('attempting to pick up cards')
+        while (this.turn.penalty.pick) {
+          this.cards[this.player].push(this.cards.stack.pop())
+          this.turn.penalty.pick--
+        }
+      }
+      
+      //choose the first card the computer can play, and play it
+      else {
+        console.log('attempting to play a card')
+        //add the card to the discard pile
+        this.cards.discarded.push(this.cards[this.player][firstIndexPlayable])
+        //remove it from the hand
+        this.cards[this.player].splice(firstIndexPlayable,1)
+      } 
+
+      console.log('results in:', this.cards.discarded, this.cards[this.player] )
+      
+      this.handleTurnEnd()
     }
   },
   computed: {
     deck: function () {
       const all = []
-      this.suits.forEach((suit, indexSuit) => this.ranks.forEach((rank, indexRank) => {
-        const card = {
+      this.suits.forEach((suit, indexSuit) => this.ranks.forEach((rank, indexRank) => all.push({
           name: `${rank}${suit}`,
           source: require(`${this.url}/${rank}${suit}.svg`),
           sourceBack: require(`${this.url}/BACK.svg`),
@@ -123,16 +199,17 @@ export default {
           runValue: indexRank,
           sortValue: indexSuit * 20 + (indexRank + 1),
           suit
-        }
-        all.push(card)
-      }))
-      
+        })))
       return this.shuffle(all)
+    },
+    canEndTurn: function () {
+      if(!this.turn.penalty && this.turn.pickCount === 0 && this.turn.series.length === 0) return false
+      return true
     }
   },
   created: function () {
     this.deal()
-
+    this.cards.p1.sort((a, b) => a.sortValue - b.sortValue)
   }
   
 }
@@ -156,5 +233,8 @@ main{
   justify-content: space-around;
   min-height: 160px;
   perspective: 29em;
+}
+.card{
+  height:120px;
 }
 </style>

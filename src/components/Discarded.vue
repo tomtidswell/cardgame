@@ -31,19 +31,7 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style >
-.card{
-  height:140px;
-}
-.pile{
-  display: flex;
-  flex-direction: column-reverse;
-  perspective: 29em;
-}
-.pile .card{
-  margin-right: -45px;
-  margin-left: -45px;
-  margin-top: -139px;
-  transform: rotateX(50deg) rotateY(180deg) rotateZ(-70deg);
-}
+<style>
+
+
 </style>
