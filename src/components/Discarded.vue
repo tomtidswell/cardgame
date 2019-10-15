@@ -3,8 +3,9 @@
     <img v-for="(card, index) in cards" 
       :key="index" 
       :src="card.source" 
-      :style="{ transform: `rotateX(30deg) rotate(${card.mess}deg)`}"
-      class="card" />
+      :style="{ transform: `rotate(${card.mess}deg)`}"
+      class="card"
+      :class="index===0 ? 'first-card' : 'absolute'" />
   </div>
 </template>
 
@@ -36,9 +37,6 @@ export default {
   display: flex;
   flex-direction: column-reverse;
   position: relative;
-}
-.discarded .card{
-  margin: -60px -29px;
 }
 
 </style>

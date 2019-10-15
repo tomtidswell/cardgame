@@ -1,16 +1,16 @@
 <template>
-  <div class="pile">
+  <div class="pile" :class="`${player}-piles`">
     <div class="">
       <PlayingCard v-for="(card, index) in piles.facedown" :key="card.name"
         :card="card"
-        :style="{ transform: `rotateX(30deg) rotate(${card.mess / 10}deg)`}"
+        :style="{ transform: `rotateX(30deg) rotate(${card.mess / 5}deg)`}"
         :index="index"
           />
     </div>
     <span class="absolute">
       <PlayingCard v-for="(card, index) in piles.faceup" :key="card.name"
         :card="card"
-        :style="{ transform: `rotateX(30deg) rotate(${card.mess / 10}deg)`}"
+        :style="{ transform: `rotateX(30deg) rotate(${card.mess / 5}deg)`}"
         :index="index"
         face />
     </span>
@@ -25,6 +25,7 @@ export default {
   components: { PlayingCard },
   props: {
     piles: Object,
+    player: String
   },
   // data: function () {
   //   return {
@@ -44,8 +45,13 @@ export default {
 .absolute{
   position: absolute;
 }
+.p1-piles{
+  transform: rotateX(30deg);
+}
+.p2-piles{
+  transform: rotateX(30deg) scale(0.8);
+}
 .pile{
-  transform: rotateX(30deg) rotateY(0deg) rotateZ(0deg);
   position: relative;
   display: flex;
   align-items: center;

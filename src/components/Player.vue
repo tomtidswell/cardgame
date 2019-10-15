@@ -6,20 +6,22 @@
       <button v-if="player==='p1' && canEndTurn" v-on:click="emitTurnEnd()">End Turn</button>
     </div>
     <div class="hand" v-if="player==='p1'" id="p1-hand">
-      <PlayingCard v-for="(card, index) in cards" 
-        :key="card.name"
-        :card="card"
-        :index="index"
-        :canBePlayed="canBePlayed(card)"
-        @cardClick="emitHandClick" 
-        face />
+      <div class="card-holder" v-for="(card, index) in cards" :key="card.name">
+        <PlayingCard 
+          :card="card"
+          :index="index"
+          :canBePlayed="canBePlayed(card)"
+          @cardClick="emitHandClick" 
+          face
+          interactive />
+      </div>
     </div>
     <div class="hand" v-if="player==='p2'" id="p2-hand">
-      <PlayingCard v-for="(card, index) in cards" 
-        :key="card.name" 
-        :card="card"
-        :index="index"
-        computer />
+      <div class="card-holder" v-for="(card, index) in cards" :key="card.name">
+        <PlayingCard 
+          :card="card"
+          :index="index" />
+      </div>
     </div>
   </div>
 </template>
@@ -69,15 +71,8 @@ export default {
 
       //if there were no previous plays, only allow a valid move
       if(!this.turn.series.length) return is.allowedFirst(this.topDiscarded, card, this.turn.penalty)
-      
-      //when there is only one previous card played
-      if(this.turn.series.length === 1){
-        //if the card would be a valid second card in a run or set, allow it
-        return is.set(this.turn.series[0], card) || is.run(this.turn.series[0], card)
-      }
-      
-      //check to make sure the series is continuing as it should
-      return is[this.turn.seriesType](this.turn.series[0], card) ? true : false
+
+      return is.set(this.turn.series[0], card)
     }
   }
 }
@@ -85,19 +80,26 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
-#p1-hand{
-  min-height: 100px;
+.hand{
   z-index: 2;
+  min-height: 120px;
+  min-width: 100px;
+  padding: 0 20px;
+  display: flex; 
 }
 #p2-hand{
-  min-height: 80px;
   transform: scale(0.7);
 }
-
 .hand-holder{
   display: flex;
   justify-content: center;
   align-items: center;
+}
+.hand .card-holder{
+  width: 15px;
+  transition: transform 0.3s;
+  z-index: 2;
+  position: relative;
 }
 .play-indicator{
   opacity: 0;
@@ -110,10 +112,6 @@ export default {
 .play-indicator.active{
   opacity: 1;
 }
-.hand{
-  padding-right: 40px;
-  padding-left: 50px;
-  display: flex; 
-}
+
 
 </style>

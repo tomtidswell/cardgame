@@ -10,17 +10,16 @@
         :cards="cards.p2.hand" 
         :active="this.player==='p2'"
         :topDiscarded="this.cards.discarded[this.cards.discarded.length-1]" />
-      <Piles
+      <Piles player='p2' 
         :piles="cards.p2.piles" />
-      <div id="table">
+      <div class="table">
         <Stack 
-          @stackClick="this.handleStackClick"
           :turn="turn"
+          :animator="animator.stack"
           :cards="cards.stack" />
-        <h2>{{msg}}</h2>
         <Discarded :cards="cards.discarded"/>
       </div>
-      <Piles
+      <Piles player='p1' 
         :piles="cards.p1.piles" />
       <Player player='p1' 
         :cards="cards.p1.hand" 
@@ -67,11 +66,13 @@ export default {
       url: './assets/img/cards',
       ranks: ['2','3','4','5','6','7','8','9','10','J','Q','K','ACE'],
       suits: ['H','C','D','S'],
+      animator: {
+        stack: { cardName: null, animation: null, timeout: null, flag: null }
+      },
       turn: {
         pickCount: 0,
         penalty: null,
         series: [],
-        seriesType: null
       },
       cards: {
         p1: { hand: [], piles: { facedown: [], faceup: [] } },
@@ -89,67 +90,73 @@ export default {
       collection.sort((a, b) => a.shuffle - b.shuffle )
       return collection
     },
-    deal(){
-      const tempDeck = this.deck.map(card => card)
-      console.log('Dealing:',tempDeck.map(card=>card.name))
+    dealRoutine(){
+      this.cards.stack = this.deck.map(card => card)
+      console.log('Dealing:',this.cards.stack.map(card=>card.name))
       //update this with non-hardcoded values
       for (let index = 0; index < 3; index++) {
-        this.cards.p1.piles.facedown.push(tempDeck.shift())
-        this.cards.p2.piles.facedown.push(tempDeck.shift())
+        this.cards.p1.piles.facedown.push(this.cards.stack.pop())
+        this.cards.p2.piles.facedown.push(this.cards.stack.pop())
       }
       for (let index = 0; index < 3; index++) {
-        this.cards.p1.piles.faceup.push(tempDeck.shift())
-        this.cards.p2.piles.faceup.push(tempDeck.shift())
+        this.cards.p2.piles.faceup.push(this.cards.stack.pop())
+        this.dealCard('p1')
       }
-      for (let index = 0; index < 10; index++) {
-        this.cards.p1.hand.push(tempDeck.shift())
-        this.cards.p2.hand.push(tempDeck.shift())
+      for (let index = 0; index < 3; index++) {
+        // this.cards.p1.hand.push(this.cards.stack.pop())
+        // this.cards.p2.hand.push(this.cards.stack.pop())
+        this.dealCard('p1')
+        this.dealCard('p2')
       }
-      this.cards.discarded.push(tempDeck.shift())
-      //add the rest of the cards to the stack
-      while (tempDeck.length) {
-        this.cards.stack.unshift(tempDeck.shift())
-      }
+
+      
+
+      this.cards.discarded.push(this.cards.stack.pop())
+
       //understand if the card results in a penalty on the first turn
-      this.turn.penalty = is.penaltyDue(this.cards.discarded)
-      console.log('Dealt:',this.cards.discarded[this.cards.discarded.length-1].name, 'penalty:', this.turn.penalty)
+      // this.turn.penalty = is.penaltyDue(this.cards.discarded)
+      // console.log('Dealt:',this.cards.discarded[this.cards.discarded.length-1].name, 'penalty:', this.turn.penalty)
+    },
+    dealCard(player){
+      const animationData = {
+        name: this.cards.stack[this.cards.stack.length-1].name,
+        animation: `deal-${player}`,
+        timeout: 200,
+        flag: player === 'p1' ? 'flip' : null
+      }
+      this.animator.stack = animationData
+      console.log(animationData.name, player)
+      setTimeout(()=>{
+        this.cards[player].hand.push(this.cards.stack.pop())
+        if(player === 'p1') this.cards[player].hand.sort((a, b) => a.runValue - b.runValue )
+      }, 1000)
     },
     handleTurnEnd(){
       const topDiscarded = this.cards.discarded[this.cards.discarded.length-1]
       
+      //deal any cards required
+      for (let i = this.cards[this.player].hand.length; i < 3; i++) {
+        this.dealCard(this.player) 
+      }
+
       //switch player
       this.player = this.player === 'p1' ? 'p2' : 'p1'
 
       //update the turn data
       this.turn.penalty = is.penaltyDue(this.cards.discarded, this.turn.penalty)
-      this.turn.pickCount = 0
       this.turn.series = []
-      this.turn.seriesType = null
 
       console.log('Played:', topDiscarded.name, 'penalty:', this.turn.penalty)
 
       //begin the computer player's turn
-      setTimeout(() => this.handleComputerTurn(), 1000)
+      // setTimeout(() => this.handleComputerTurn(), 1000)
+      if(this.player === 'p2')
+        setTimeout(() => this.handleTurnEnd(), 2000)
       
-    },
-    handleStackClick(){
-      this.turn.pickCount++
-      console.log('picked:', this.turn.pickCount)
-      this.cards.p1.hand.push(this.cards.stack.pop())
-      this.cards.p1.hand.sort((a, b) => a.sortValue - b.sortValue)
     },
     handleHandClick(cardPlayed, indexOfCard){
       //add it to the series of cards which have been played
       this.turn.series.unshift(cardPlayed)
-
-      //set the start of a series (if no series type is set yet, and this is the second card)
-      if(!this.turn.seriesType && this.turn.series.length === 2){
-        //if the cards are the same value then type is 'set'
-        if(is.set(this.turn.series[1], cardPlayed)) this.turn.seriesType = 'set' 
-        //if the cards are consecutive then the type is 'run'
-        if(is.run(this.turn.series[1], cardPlayed)) this.turn.seriesType = 'run'
-      }
-      // console.log('playing', cardData, this.hand)
       
       //add the card to the discard pile
       this.cards.discarded.push(cardPlayed)
@@ -222,7 +229,7 @@ export default {
     }
   },
   created: function () {
-    this.deal()
+    this.dealRoutine()
     this.cards.p1.hand.sort((a, b) => a.sortValue - b.sortValue)
   }
   
@@ -241,16 +248,17 @@ export default {
 }
 main{
   perspective: 50em;
+  /* transform-style: preserve-3d; */
 }
 h2{
-  min-height: 100px;
+  text-align: center;
 }
-#table{
-  transform: rotateX(30deg) rotateY(0deg) rotateZ(0deg);
-  position: relative;
+.table{
+  transform: rotateX(30deg) scale(0.9);
   display: flex;
-  align-items: center;
   justify-content: space-evenly;
+  align-items: center;
+  transform-style: preserve-3d;
 }
 .card{
   height:120px;

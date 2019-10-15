@@ -1,31 +1,28 @@
 <template>
   <div class="stack">
     <template v-for="(card, index) in cards">
-      <!-- event listener for the final item -->
-      <img 
-        class="card"
-        :class="{ 'deal-p1': animate, 'deal-p2': card.deal === 'p2' }"
-        v-if="index===cards.length-1" 
+      <PlayingCard
         :key="card.name" 
-        :src="flip ? card.source : card.sourceBack"
-        v-on:click="emitStackClick"
-        :data-card="card.name" />
-
-      <img :key="index" v-else :src="card.sourceBack" :data-card="card.name" class="card" />
-      <!-- <p>{{card.name}}</p>
-      <p>{{index}}</p> -->
+        :card="card"
+        :face="flip"
+        :style="{ transform: `translateZ(${index}px) rotateZ(${index/5}deg)` }"
+        :class="index===0 ? 'first-card' : 'absolute'"
+        :index="index" />
     </template>
   </div>
 </template>
+<!-- :animator="animator.name === card.name ? animator : null" -->
 
 <script>
+import PlayingCard from './PlayingCard.vue'
 
 export default {
   name: 'Stack',
+  components: { PlayingCard },
   props: {
     cards: Array,
-    stackClick: Function,
     turn: Object,
+    animator: Object
   },
   data: function () {
     return {
@@ -65,38 +62,15 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style >
-h2{
-  position: absolute;
-  text-align: center;
-}
+
 .stack{
   display: flex;
   flex-direction: column-reverse;
-  perspective: 29em;
   position: relative;
+  transform:  rotateZ(80deg);
+  transform-style: preserve-3d;
 }
 .stack .card{
-  margin-top: -59px;
-  margin-bottom: -59px;
-  transform: rotateX(40deg) rotateY(180deg) rotateZ(-60deg);
 }
-.stack .card.deal-p1{
-  animation: deal-p1 3s 1;
-}
-@keyframes deal-p1 {
-  0% {  
-    transform: rotateX(50deg) rotateY(180deg) rotateZ(-70deg);
-  }
-  30%{  
-    transform: rotateX(180deg) rotateY(180deg) rotateZ(-0deg) translateX(-25vw) translateY(-10vh);
-  }
-  45%{  
-    transform: rotateX(180deg) rotateY(180deg) rotateZ(0deg) translateX(-25vw) translateY(-18vh);
-    opacity: 1; 
-  }
-  100%{ 
-    transform: rotateX(180deg) rotateY(180deg) rotateZ(0deg) translateX(-25vw) translateY(-30vh);
-    opacity: 0;
-  }
-}
+
 </style>
