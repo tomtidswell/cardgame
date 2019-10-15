@@ -31,16 +31,6 @@ header{
   background-color: #0D2C40;
 }
 
-main{
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  background-image: linear-gradient(160deg, #13547a 0%, #80d0c7 100%);
-  justify-content: space-around;
-  overflow: hidden;
-  /* min-height: 90vh; */
-}
-
 footer{
   display: flex;
   justify-content: space-between;

@@ -1,5 +1,5 @@
 <template>
-  <div class="pile" :class="`${player}-piles`">
+  <div class="piles" :class="`${player}-piles`">
     <div class="">
       <PlayingCard v-for="(card, index) in piles.facedown" :key="card.name"
         :card="card"
@@ -41,23 +41,28 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style >
+<style>
 .absolute{
   position: absolute;
 }
-.p1-piles{
-  transform: rotateX(30deg);
-}
-.p2-piles{
-  transform: rotateX(30deg) scale(0.8);
-}
-.pile{
+.piles{
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.pile .card{
+.p1-piles{
+  transform: rotateX(30deg);
+}
+.p2-piles{
+  transform: rotateX(30deg);
+}
+.p1-piles .card{
   margin: 0 10px;
+  height: 110px;
+}
+.p2-piles .card{
+  margin: 0 10px;
+  height: 90px;
 }
 </style>

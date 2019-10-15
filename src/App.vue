@@ -10,8 +10,9 @@
         :cards="cards.p2.hand" 
         :active="this.player==='p2'"
         :topDiscarded="this.cards.discarded[this.cards.discarded.length-1]" />
-      <Piles player='p2' 
-        :piles="cards.p2.piles" />
+
+      <Piles player='p2' :piles="cards.p2.piles" />
+
       <div class="table">
         <Stack 
           :turn="turn"
@@ -19,8 +20,9 @@
           :cards="cards.stack" />
         <Discarded :cards="cards.discarded"/>
       </div>
-      <Piles player='p1' 
-        :piles="cards.p1.piles" />
+
+      <Piles player='p1' :piles="cards.p1.piles" />
+
       <Player player='p1' 
         :cards="cards.p1.hand" 
         :active="this.player==='p1'"
@@ -29,9 +31,10 @@
         :topDiscarded="this.cards.discarded[this.cards.discarded.length-1]"
         @turnEnd="handleTurnEnd"
         @handClick="this.handleHandClick"/>
+
     </main>
           
-    <Message :msg="msg"/>
+    <Message :message="message" v-if="message" @clear="this.clearPopup"/>
 
     <footer>
       <p class="copyright"><span class="name">Tom Tidswell</span> &copy; 2019 &hearts;</p>
@@ -61,7 +64,7 @@ export default {
   components: { HelloWorld, Player, Message, Discarded, Stack, Piles },
   data: function () {
     return {
-      msg: 'Hello',
+      message: '',
       player: 'p1',
       url: './assets/img/cards',
       ranks: ['2','3','4','5','6','7','8','9','10','J','Q','K','ACE'],
@@ -108,14 +111,18 @@ export default {
         this.dealCard('p1')
         this.dealCard('p2')
       }
-
-      
-
+      this.popup('Choose your best cards for your three piles')
       this.cards.discarded.push(this.cards.stack.pop())
 
       //understand if the card results in a penalty on the first turn
       // this.turn.penalty = is.penaltyDue(this.cards.discarded)
       // console.log('Dealt:',this.cards.discarded[this.cards.discarded.length-1].name, 'penalty:', this.turn.penalty)
+    },
+    popup(message){
+      this.message = message
+    },
+    clearPopup(){
+      this.message = ''
     },
     dealCard(player){
       const animationData = {
@@ -247,20 +254,23 @@ export default {
   flex-direction: column;
 }
 main{
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  background-image: linear-gradient(160deg, #13547a 0%, #80d0c7 100%);
+  justify-content: space-evenly;
+  overflow: hidden;
   perspective: 50em;
-  /* transform-style: preserve-3d; */
 }
 h2{
   text-align: center;
 }
 .table{
-  transform: rotateX(30deg) scale(0.9);
+  transform: rotateX(30deg);
   display: flex;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
   transform-style: preserve-3d;
 }
-.card{
-  height:120px;
-}
+
 </style>

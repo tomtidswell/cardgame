@@ -38,5 +38,8 @@ export default {
   flex-direction: column-reverse;
   position: relative;
 }
+.discarded .card{
+  height:100px;
+}
 
 </style>

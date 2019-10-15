@@ -67,10 +67,12 @@ export default {
   display: flex;
   flex-direction: column-reverse;
   position: relative;
-  transform:  rotateZ(80deg);
+  transform: rotateZ(80deg);
   transform-style: preserve-3d;
+  margin-right: 50px;
 }
 .stack .card{
+  height:100px;
 }
 
 </style>

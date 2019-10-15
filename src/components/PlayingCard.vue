@@ -65,13 +65,11 @@ export default {
 }
 
 #p1-hand.hand .card{
-  opacity: 1;
   animation: pick-p1 1s 1;
   filter: contrast(70%);
   position: absolute;
 }
 #p1-hand.hand .allowed.card{
-  opacity: 1;
   filter: none;
 }
 #p1-hand.hand .allowed.card:hover{
@@ -84,8 +82,6 @@ export default {
 }
 #p2-hand.hand .card{
   animation: pick-p2 1s 1;
-  /* transform: rotateX(0) rotateY(0) rotateZ(0) translateX(0) translateY(0); */
-  opacity: 1;
 }
 .stack .card.deal-p1{
   animation: deal-p1 1s 1;

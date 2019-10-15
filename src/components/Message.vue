@@ -1,5 +1,5 @@
 <template>
-  <p id="game-message">{{msg}}</p>
+  <p id="game-message" :class="{ show: show }">{{text}}</p>
 </template>
 
 <script>
@@ -7,18 +7,24 @@
 export default {
   name: 'Message',
   props: {
-    msg: String,
+    message: String,
   },
-  // data: function () {
-  //   return {
-  //     className: `${this.player}-indicator`
-  //   }
-  // },
+  data: function () {
+    return {
+      text: this.message,
+      show: false
+    }
+  },
   // computed: {
-  //   className: function () {
+  //   text: function () {
   //     return `${this.player}-indicator`
   //   }
   // }
+  created: function () {
+    
+    setTimeout(()=>this.show = true, 500)
+    setTimeout(()=>this.$emit('clear'), 3000)
+  }
 }
 </script>
 
@@ -27,21 +33,26 @@ export default {
 #game-message{
   position: fixed;
   margin:0 auto;
-  left:0;
-  right:0;
-  width:250px;
-  transition: all, 1s;
-  bottom:-150px;
-  background-color: rgb(200,121,178);
+  left: calc(50% - 120px);
+  bottom: 50px;
+  width:240px;
+  background-color: rgb(13, 44, 64);
   padding:10px;
   border: 5px solid white;
   border-radius: 10px;
   font-weight: 600;
   text-transform: uppercase;
+  animation: message 1.5s 2 alternate;
 }
 
-#game-message.show{
-  transition: all, 1s;
-  bottom:50px;
+@keyframes message {
+  0% {  
+    bottom: 10px;
+    opacity: 0; 
+  }
+  30%{  
+    bottom: 50px;
+    opacity: 1; 
+  }
 }
 </style>

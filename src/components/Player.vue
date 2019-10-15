@@ -82,13 +82,15 @@ export default {
 <style>
 .hand{
   z-index: 2;
-  min-height: 120px;
   min-width: 100px;
   padding: 0 20px;
   display: flex; 
 }
-#p2-hand{
-  transform: scale(0.7);
+#p1-hand .card, #p1-hand .card-holder{
+  height:120px;
+}
+#p2-hand .card{
+  height:80px;
 }
 .hand-holder{
   display: flex;
