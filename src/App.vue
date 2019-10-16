@@ -74,7 +74,6 @@ export default {
         stack: { cardName: null, animation: null, timeout: null, flag: null }
       },
       turn: {
-        pickCount: 0,
         penalty: null,
         series: [],
       },
@@ -96,25 +95,25 @@ export default {
     },
     dealRoutine(){
       this.cards.stack = this.deck.map(card => card)
+
       console.log('Dealing:',this.cards.stack.map(card=>card.name))
+
       //update this with non-hardcoded values
       for (let index = 0; index < 3; index++) {
-        this.cards.p1.piles.facedown.push(this.cards.stack.pop())
-        this.cards.p2.piles.facedown.push(this.cards.stack.pop())
+        this.moveCard(0, this.cards.stack, this.cards.p2.piles.facedown, 'p2-stack-pile0')
+        this.moveCard(0, this.cards.stack, this.cards.p1.piles.facedown, 'p1-stack-pile0')
       }
       for (let index = 0; index < 3; index++) {
-        this.cards.p2.piles.faceup.push(this.cards.stack.pop())
-        this.dealCard('p1')
+        this.moveCard(0, this.cards.stack, this.cards.p2.piles.faceup, 'p2-stack-pile0')
+        this.moveCard(0, this.cards.stack, this.cards.p1.hand, 'p1-stack-hand')
       }
       for (let index = 0; index < 3; index++) {
-        // this.cards.p1.hand.push(this.cards.stack.pop())
-        // this.cards.p2.hand.push(this.cards.stack.pop())
-        this.dealCard('p1')
-        this.dealCard('p2')
+        this.moveCard(0, this.cards.stack, this.cards.p2.hand, 'p2-stack-hand')
+        this.moveCard(0, this.cards.stack, this.cards.p1.hand, 'p1-stack-hand')
       }
-      this.cards.discarded.push(this.cards.stack.pop())
+      this.moveCard(0, this.cards.stack, this.cards.discarded, '')
 
-      this.popup('Choose your best cards for your three piles')
+      // this.popup('Choose your best cards for your three piles')
     },
     popup(message){
       this.message = message
@@ -122,35 +121,31 @@ export default {
     clearPopup(){
       this.message = ''
     },
-    dealCard(player){
-      const animationData = {
-        name: this.cards.stack[this.cards.stack.length-1].name,
-        animation: `deal-${player}`,
-        timeout: 200,
-        flag: player === 'p1' ? 'flip' : null
-      }
-      this.animator.stack = animationData
-      console.log(animationData.name, player)
-      setTimeout(()=>{
-        this.cards[player].hand.push(this.cards.stack.pop())
-        if(player === 'p1') this.cards[player].hand.sort((a, b) => a.runValue - b.runValue )
-      }, 1000)
+    sortHumanHand(){
+      this.cards.p1.hand.sort((a, b) => a.runValue - b.runValue )
     },
-    moveCard(card, from, to, specialClass){
-      //find the index
-      const indexOfCard = from.findIndex(item=>item.name===card.name)
+    moveCard(indexOfCard, from, to, specialClass = ''){
+      const card = from[indexOfCard]
       //remove it from the old array
       from.splice(indexOfCard,1)
+      //add the special class
+      card.specialClass = specialClass
       //add the card to the new array      
       to.push(card)
     },
     handleTurnEnd(){
-      const topDiscarded = this.cards.discarded[this.cards.discarded.length-1]
-      
+      //some aliases to make the code more readable
+      const playerHand = this.cards[this.player].hand
       //deal any cards required
-      for (let i = this.cards[this.player].hand.length; i < 3; i++) {
-        this.dealCard(this.player) 
+      for (let i = playerHand.length; i < 3; i++) {
+        this.moveCard(0, this.cards.stack, playerHand, `${this.player}-stack-hand`)
       }
+      
+      //if no cards were played, and the player wasnt supposed to miss a turn, then move all cards from the discard pile to the players hand
+      if(this.turn.series.length === 0 && !this.turn.penalty)
+        while (this.cards.discarded.length) {
+          this.moveCard(0, this.cards.discarded, playerHand, `${this.player}-discard-hand`)
+        }
 
       //switch player
       this.player = this.player === 'p1' ? 'p2' : 'p1'
@@ -159,30 +154,32 @@ export default {
       this.turn.penalty = is.penaltyDue(this.cards.discarded, this.turn.penalty)
       this.turn.series = []
 
-      console.log('Played:', topDiscarded.name, 'penalty:', this.turn.penalty)
-
       //begin the computer player's turn
-      // setTimeout(() => this.handleComputerTurn(), 1000)
-      if(this.player === 'p2')
-        setTimeout(() => this.handleTurnEnd(), 2000)
+      setTimeout(() => this.handleComputerTurn(), 2000)
+      // if(this.player === 'p2')
+      //   setTimeout(() => this.handleTurnEnd(), 2000)
       
     },
     handleHandClick(cardPlayed, indexOfCard){
+      //some aliases to make the code more readable
+      const p1hand = this.cards.p1.hand
+      const p1piles = this.cards.p1.piles
+
       //determine where to put the card based on the game mode
       switch (this.mode) {
         case 'setup':
           //add the card to the faceup pile and remove from the hand
-          this.moveCard(cardPlayed, this.cards.p1.hand, this.cards.p1.piles.faceup)
+          this.moveCard(indexOfCard, p1hand, p1piles.faceup, `p1-hand-pile${p1piles.faceup.length}`)
           //change the mode if there are now 3 cards in the faceup pile 
-          if(this.cards.p1.piles.faceup.length === 3) this.mode = 'play'
+          if(p1piles.faceup.length === 3) this.mode = 'play'
           break
         case 'play':
           //add it to the series of cards which have been played
           this.turn.series.unshift(cardPlayed)
           //add the card to the discard pile and remove it from the hand
-          this.moveCard(cardPlayed, this.cards.p1.hand, this.cards.discarded)
+          this.moveCard(indexOfCard, p1hand, this.cards.discarded, 'p1-hand-discard')
           //check for a win
-          if(!this.cards.p1.hand.length) console.log(this.player, 'wins')
+          if(!p1hand.length) console.log(this.player, 'wins')
           break
       }
     },
@@ -245,8 +242,7 @@ export default {
       return this.shuffle(all)
     },
     canEndTurn: function () {
-      if(!this.turn.penalty && this.turn.pickCount === 0 && this.turn.series.length === 0) return false
-      return true
+      return this.mode !== 'setup'
     }
   },
   created: function () {
@@ -286,5 +282,7 @@ h2{
   align-items: center;
   transform-style: preserve-3d;
 }
+
+
 
 </style>

@@ -8,6 +8,8 @@ const is = {
   allowedFirst: function (prev, curr, penalty, mode) {
     //if the game is in setup mode, allow any card to be played
     if(mode === 'setup') return true
+    //if there is no previous card, allow any card to be played
+    if(!prev) return true
     //logic to determine if we are reacting to the other players special card. Return true if the cards value is equal to the counter value of the penalty
     if(penalty) return curr.value === penalty.counterValue
 
@@ -28,8 +30,10 @@ const is = {
     return is.set(turn.series[0], card)
   },
   penaltyDue: function (discarded, prevPenalty) {
-    const topDiscard = discarded[discarded.length - 1]
     let penalty = null
+    //if the discard pile is empty, return no penalty
+    if(!discarded.length) return penalty
+    const topDiscard = discarded[discarded.length - 1]
     // console.log(discarded.map(card=>card.name), topDiscard)
 
     //if there was a previous penalty and it was due to the current topDiscard card, then ignore it

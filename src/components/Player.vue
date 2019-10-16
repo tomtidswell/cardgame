@@ -1,11 +1,11 @@
 <template>
   <div class="hand-holder">
     <div :class="{ active: active }" class="play-indicator">
-      <div><span :class="{ active: active }">{{message}}</span></div>
+      <p>{{message}}</p>
       <button v-if="player==='p1' && !canEndTurn" disabled>End Turn</button>
       <button v-if="player==='p1' && canEndTurn" v-on:click="emitTurnEnd()">End Turn</button>
     </div>
-    <div class="hand" v-if="player==='p1'" id="p1-hand">
+    <div class="hand p1-hand" v-if="player==='p1'">
       <div class="card-holder" v-for="(card, index) in cards" :key="card.name">
         <PlayingCard 
           :card="card"
@@ -16,7 +16,7 @@
           interactive />
       </div>
     </div>
-    <div class="hand" v-if="player==='p2'" id="p2-hand">
+    <div class="hand p2-hand" v-if="player==='p2'">
       <div class="card-holder" v-for="(card, index) in cards" :key="card.name">
         <PlayingCard 
           :card="card"
@@ -42,19 +42,19 @@ export default {
     turn: Object,
     mode: String
   },
-  data: function () {
-    return {
-      allowedDraw: 1
-    }
-  },
+  // data: function () {
+  //   return {
+  //     allowedDraw: 1
+  //   }
+  // },
   computed: {
     message: function () {
       if(this.player === 'p2') return 'Computer Thinking'
-      if(this.turn.penalty){
-        return this.turn.penalty.pick ? `Pick ${this.turn.penalty.pick} or counter it` : 'Miss a turn or counter it'
-      } else {
-        return this.turn.pickCount ? 'All done' : 'Play or pick a card'
-      }
+      if(this.mode === 'setup') return 'Choose three cards for your three piles'
+      if(this.turn.penalty) return this.turn.penalty.missTurn ? 
+          `Miss a turn or counter it with an ${this.turn.penalty.counterValue} card` : ''
+      return this.turn.series.length ? 
+        'Continue or end turn?' : 'Play a card or take all discarded cards'
     }
   },
   methods: {
@@ -62,9 +62,10 @@ export default {
       //signal the end of the turn to the app
       this.$emit('turnEnd')
     },
-    emitHandClick(cardData, index){        
+    emitHandClick(cardData, indexOfCard){        
       //emit the click and card back to the app
-      setTimeout(()=> this.$emit('handClick', cardData, index), 1300)
+      // setTimeout(()=> this.$emit('handClick', cardData, index), 1300)
+      this.$emit('handClick', cardData, indexOfCard)
     },
     canBePlayed(card){
       //cant be played if it's not the players turn!
@@ -87,10 +88,10 @@ export default {
   padding: 0 20px;
   display: flex; 
 }
-#p1-hand .card, #p1-hand .card-holder{
+.p1-hand .card, .p1-hand .card-holder{
   height:120px;
 }
-#p2-hand .card{
+.p2-hand .card, .p2-hand .card-holder{
   height:80px;
 }
 .hand-holder{
@@ -111,6 +112,11 @@ export default {
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
+}
+.play-indicator p{
+  max-width: 160px;
+  text-align: right;
+  margin: 5px 0;
 }
 .play-indicator.active{
   opacity: 1;

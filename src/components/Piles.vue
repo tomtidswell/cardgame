@@ -12,6 +12,7 @@
         :card="card"
         :style="{ transform: `rotateX(30deg) rotate(${card.mess / 5}deg)`}"
         :index="index"
+        interactive
         face />
     </span>
   </div>
@@ -65,6 +66,7 @@ export default {
 .p1-piles .card{
   margin: 0 10px;
   height: 110px;
+  z-index: 1;
 }
 .p2-piles .card{
   margin: 0 10px;

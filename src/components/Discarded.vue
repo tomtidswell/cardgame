@@ -1,20 +1,21 @@
 <template>
   <div class="discarded">
-    <img v-for="(card, index) in cards" 
+    <PlayingCard v-for="(card, index) in cards" 
       :key="index" 
-      :src="card.source" 
+      :card="card"
       :style="{ transform: `rotate(${card.mess}deg)`}"
-      class="card"
-      :class="index===0 ? 'first-card' : 'absolute'" />
+      face />
   </div>
 </template>
 
 
 
 <script>
+import PlayingCard from './PlayingCard.vue'
 
 export default {
   name: 'Discarded',
+  components: { PlayingCard },
   props: {
     cards: Array,
   },
@@ -37,10 +38,13 @@ export default {
   display: flex;
   flex-direction: column-reverse;
   position: relative;
+  margin-left: 60px;
+  min-height: 100px;
+  min-width: 100px;
 }
 .discarded .card{
   height:100px;
+  z-index: 100;
+  position: absolute;
 }
-
-
 </style>

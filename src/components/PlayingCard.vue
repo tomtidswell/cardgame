@@ -4,15 +4,15 @@
     class="card"
     :data-card="card.name"
     :src="face ? card.source : card.sourceBack"
-    :class="{ throw: animate, allowed: canBePlayed }" />
+    :class="{ allowed: canBePlayed, [card.specialClass]: card.specialClass }" />
   <img v-else
     class="card"
     :data-card="card.name"
-    :class="{ [animationName()]: animator }"
+    :class="{ [animationName()]: animator, [card.specialClass]: card.specialClass }"
     :src="face || flip ? card.source : card.sourceBack" />
 </template>
 
-// :class="{ [animator.animation]: animator.animation }"
+
 <script>
 
 export default {
@@ -41,7 +41,7 @@ export default {
       //block play if card is not allowed
       if (!this.canBePlayed) return
       //set the animation
-      this.animate = true
+      // this.animate = true
       //emit the event
       this.$emit('cardClick', this.card, index)
     },
@@ -49,7 +49,6 @@ export default {
       if(this.animator){
         if(this.animator.flag === 'flip') setTimeout(()=> this.flip = true, this.animator.timeout)
       }
-
       return this.animator ? this.animator.animation : null
     }
   }
@@ -57,48 +56,59 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
+<style>
 
 .card-holder .card{
   transition: transform 0.3s;
   z-index: 2;
 }
-
-#p1-hand.hand .card{
-  animation: pick-p1 1s 1;
-  filter: contrast(70%);
-  position: absolute;
+.p1-piles .card{
+  position: relative;
 }
-#p1-hand.hand .allowed.card{
+.p1-hand .card{
+  filter: contrast(70%);
+  position: relative;
+}
+.p1-hand .allowed.card{
   filter: none;
 }
-#p1-hand.hand .allowed.card:hover{
+.p1-hand .allowed.card:hover{
   transform: translateY(-15px);
 }
-#p1-hand.hand .card.throw{
-  animation: throw-p1 1.6s 1;
-  transform: rotateX(51deg) rotateY(-15deg) rotateZ(-34deg) translateX(29vw) translateY(-17vh);
-  opacity: 0;
-}
-#p2-hand.hand .card{
-  animation: pick-p2 1s 1;
-}
-.stack .card.deal-p1{
-  animation: deal-p1 1s 1;
-}
 
-@keyframes pick-p1 {
+/* DEALING CLASSES */
+
+.card.p1-stack-hand{ animation: p1-stack-hand 1s 1; }
+.card.p2-stack-hand{ animation: p2-stack-hand 1s 1; }
+
+/* PUTTING ONTO PILE CLASSES */
+.card.p1-hand-pile0{ animation: p1-hand-pile0 1s 1; }
+.card.p1-hand-pile1{ animation: p1-hand-pile1 1s 1; }
+.card.p1-hand-pile2{ animation: p1-hand-pile2 1s 1; }
+
+/* PICKING DISCARD INTO HAND CLASSES */
+
+.card.p1-discard-hand{ animation: p1-discard-hand 1s 1; }
+.card.p2-discard-hand{ animation: p2-discard-hand 1s 1; }
+
+
+/* THROWING FROM HAND CLASSES */
+.card.p1-hand-discard{ animation: p1-hand-discard 1s 1; }
+
+
+
+@keyframes p1-stack-hand {
   0% {  
     transform: rotateX(-90deg) rotateY(0deg) rotateZ(90deg) scale(0.8);
     opacity: 0;
     top: -40vh;
-    left: -15vw;
+    left: -30vw;
   }
   30% {  
     transform: rotateX(32deg) rotateY(0deg) rotateZ(90deg) scale(0.8);
     opacity: 1;
     top: -40vh;
-    left: -15vw;
+    left: -30vw;
   }
   100%{ 
     transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1);
@@ -107,21 +117,7 @@ export default {
   }
 }
 
-@keyframes throw-p1 {
-  0% {  
-    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateX(0vw) translateY(-15px);
-    opacity: 1; 
-  }
-  65%{  
-    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateX(0vw) translateY(-180px);
-    opacity: 1; 
-  }
-  100%{ 
-    transform: rotateX(50deg) rotateY(0deg) rotateZ(-30deg) translateX(29vw) translateY(-20vh);
-    opacity: 0;
-  }
-}
-@keyframes pick-p2 {
+@keyframes p2-stack-hand {
   0%{ 
     transform: rotateX(0deg) rotateY(20deg) rotateZ(0deg) translateX(-60vw) translateY(30vh);
     opacity: 0;
@@ -131,4 +127,79 @@ export default {
     opacity: 1; 
   }
 }
+
+@keyframes p2-discard-hand {
+  0%{ 
+    transform: rotateX(0deg) rotateY(20deg) rotateZ(0deg) translateX(-10vw) translateY(30vh);
+    opacity: 0;
+  }
+  100% {  
+    transform: rotateX(0) rotateY(0) rotateZ(0) translateX(0) translateY(0);
+    opacity: 1; 
+  }
+}
+
+@keyframes p1-hand-pile0 {
+  from{ 
+    top: 20vh;
+    left: 20vw;
+    opacity: 0;
+  }
+  to{  
+    top: 0vh;
+    left: 0vw;
+    opacity: 1; 
+  }
+}
+@keyframes p1-hand-pile1 {
+  from{ 
+    top: 20vh;
+    left: 10vw;
+    opacity: 0;
+  }
+  to{  
+    top: 0vh;
+    left: 0vw;
+    opacity: 1; 
+  }
+}
+@keyframes p1-hand-pile2 {
+  from{ 
+    top: 20vh;
+    left: 0vw;
+    opacity: 0;
+  }
+  to{  
+    top: 0vh;
+    left: 0vw;
+    opacity: 1; 
+  }
+}
+@keyframes p1-hand-discard {
+  from{ 
+    top: 20vh;
+    left: 5vw;
+    opacity: 0;
+  }
+  to{  
+    top: 0vh;
+    left: 0vw;
+    opacity: 1; 
+  }
+}
+@keyframes p1-discard-hand {
+  from{ 
+    top: -40vh;
+    left: -5vw;
+    opacity: 0;
+    transform:scale(0.8);
+  }
+  to{  
+    top: 0vh;
+    left: 0vw;
+    opacity: 1;
+    transform:scale(1);
+  }
+}
+
 </style>

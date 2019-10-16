@@ -6,7 +6,6 @@
         :card="card"
         :face="flip"
         :style="{ transform: `translateZ(${index}px) rotateZ(${index/5}deg)` }"
-        :class="index===0 ? 'first-card' : 'absolute'"
         :index="index" />
     </template>
   </div>
@@ -62,19 +61,18 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style >
-.absolute{
-  position: absolute;
-}
 .stack{
   display: flex;
   flex-direction: column-reverse;
   position: relative;
   transform: rotateZ(80deg);
   transform-style: preserve-3d;
-  margin-right: 50px;
+  min-height: 100px;
+  min-width: 100px;
 }
 .stack .card{
   height:100px;
+  position: absolute;
 }
 
 </style>
