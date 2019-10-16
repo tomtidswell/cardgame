@@ -1,13 +1,13 @@
 <template>
   <div class="piles" :class="`${player}-piles`">
-    <div class="">
+    <div class="facedown">
       <PlayingCard v-for="(card, index) in piles.facedown" :key="card.name"
         :card="card"
         :style="{ transform: `rotateX(30deg) rotate(${card.mess / 5}deg)`}"
         :index="index"
           />
     </div>
-    <span class="absolute">
+    <span class="absolute faceup">
       <PlayingCard v-for="(card, index) in piles.faceup" :key="card.name"
         :card="card"
         :style="{ transform: `rotateX(30deg) rotate(${card.mess / 5}deg)`}"
@@ -42,8 +42,13 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
-.absolute{
+.p1-piles .faceup{
   position: absolute;
+  min-width: 300px;
+}
+.p2-piles .faceup{
+  position: absolute;
+  min-width: 265px;
 }
 .piles{
   position: relative;

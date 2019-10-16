@@ -39,7 +39,8 @@ export default {
     cards: Array,
     topDiscarded: Object,
     canEndTurn: Boolean,
-    turn: Object
+    turn: Object,
+    mode: String
   },
   data: function () {
     return {
@@ -70,7 +71,7 @@ export default {
       if(!this.active) return false
 
       //if there were no previous plays, only allow a valid move
-      if(!this.turn.series.length) return is.allowedFirst(this.topDiscarded, card, this.turn.penalty)
+      if(!this.turn.series.length) return is.allowedFirst(this.topDiscarded, card, this.turn.penalty, this.mode)
 
       return is.set(this.turn.series[0], card)
     }

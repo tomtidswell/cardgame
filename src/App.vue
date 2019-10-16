@@ -28,6 +28,7 @@
         :active="this.player==='p1'"
         :turn="turn"
         :canEndTurn="canEndTurn"
+        :mode="mode"
         :topDiscarded="this.cards.discarded[this.cards.discarded.length-1]"
         @turnEnd="handleTurnEnd"
         @handClick="this.handleHandClick"/>
@@ -49,7 +50,6 @@
 
 <script>
 //components
-import HelloWorld from './components/HelloWorld.vue'
 import Player from './components/Player.vue'
 import Message from './components/Message.vue'
 import Stack from './components/Stack.vue'
@@ -61,11 +61,12 @@ import is from './lib/is'
 
 export default {
   name: 'app',
-  components: { HelloWorld, Player, Message, Discarded, Stack, Piles },
+  components: { Player, Message, Discarded, Stack, Piles },
   data: function () {
     return {
       message: '',
       player: 'p1',
+      mode: 'setup',
       url: './assets/img/cards',
       ranks: ['2','3','4','5','6','7','8','9','10','J','Q','K','ACE'],
       suits: ['H','C','D','S'],
@@ -111,12 +112,9 @@ export default {
         this.dealCard('p1')
         this.dealCard('p2')
       }
-      this.popup('Choose your best cards for your three piles')
       this.cards.discarded.push(this.cards.stack.pop())
 
-      //understand if the card results in a penalty on the first turn
-      // this.turn.penalty = is.penaltyDue(this.cards.discarded)
-      // console.log('Dealt:',this.cards.discarded[this.cards.discarded.length-1].name, 'penalty:', this.turn.penalty)
+      this.popup('Choose your best cards for your three piles')
     },
     popup(message){
       this.message = message
@@ -137,6 +135,14 @@ export default {
         this.cards[player].hand.push(this.cards.stack.pop())
         if(player === 'p1') this.cards[player].hand.sort((a, b) => a.runValue - b.runValue )
       }, 1000)
+    },
+    moveCard(card, from, to, specialClass){
+      //find the index
+      const indexOfCard = from.findIndex(item=>item.name===card.name)
+      //remove it from the old array
+      from.splice(indexOfCard,1)
+      //add the card to the new array      
+      to.push(card)
     },
     handleTurnEnd(){
       const topDiscarded = this.cards.discarded[this.cards.discarded.length-1]
@@ -162,22 +168,30 @@ export default {
       
     },
     handleHandClick(cardPlayed, indexOfCard){
-      //add it to the series of cards which have been played
-      this.turn.series.unshift(cardPlayed)
-      
-      //add the card to the discard pile
-      this.cards.discarded.push(cardPlayed)
-      //remove it from the hand
-      this.cards.p1.hand.splice(indexOfCard,1)
-      //check for a win
-      if(!this.cards.p1.hand.length) console.log(this.player, 'wins')
+      //determine where to put the card based on the game mode
+      switch (this.mode) {
+        case 'setup':
+          //add the card to the faceup pile and remove from the hand
+          this.moveCard(cardPlayed, this.cards.p1.hand, this.cards.p1.piles.faceup)
+          //change the mode if there are now 3 cards in the faceup pile 
+          if(this.cards.p1.piles.faceup.length === 3) this.mode = 'play'
+          break
+        case 'play':
+          //add it to the series of cards which have been played
+          this.turn.series.unshift(cardPlayed)
+          //add the card to the discard pile and remove it from the hand
+          this.moveCard(cardPlayed, this.cards.p1.hand, this.cards.discarded)
+          //check for a win
+          if(!this.cards.p1.hand.length) console.log(this.player, 'wins')
+          break
+      }
     },
     handleComputerTurn(){
       //prevent automating the human's turn!
       if(this.player === 'p1') return
 
       const topDiscarded = this.cards.discarded[this.cards.discarded.length-1]
-      const playableCards = this.cards[this.player].hand.filter(card=>is.validMove(card, this.turn, topDiscarded))
+      const playableCards = this.cards[this.player].hand.filter(card=>is.validMove(card, this.turn, topDiscarded, this.mode))
       const firstIndexPlayable = this.cards[this.player].hand.indexOf(playableCards[0])
       // const firstPlayable = playableCards[0]
       //output the comp cards
@@ -237,7 +251,7 @@ export default {
   },
   created: function () {
     this.dealRoutine()
-    this.cards.p1.hand.sort((a, b) => a.sortValue - b.sortValue)
+
   }
   
 }

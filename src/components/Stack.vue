@@ -62,7 +62,9 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style >
-
+.absolute{
+  position: absolute;
+}
 .stack{
   display: flex;
   flex-direction: column-reverse;

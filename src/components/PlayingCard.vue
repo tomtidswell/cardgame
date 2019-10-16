@@ -92,13 +92,13 @@ export default {
     transform: rotateX(-90deg) rotateY(0deg) rotateZ(90deg) scale(0.8);
     opacity: 0;
     top: -40vh;
-    left: -25vw;
+    left: -15vw;
   }
   30% {  
     transform: rotateX(32deg) rotateY(0deg) rotateZ(90deg) scale(0.8);
     opacity: 1;
     top: -40vh;
-    left: -25vw;
+    left: -15vw;
   }
   100%{ 
     transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1);
