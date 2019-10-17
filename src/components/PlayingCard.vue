@@ -4,11 +4,11 @@
     class="card"
     :data-card="card.name"
     :src="face ? card.source : card.sourceBack"
-    :class="{ allowed: canBePlayed, [card.specialClass]: card.specialClass }" />
+    :class="{ allowed: canBePlayed, [className]: className }" />
   <img v-else
     class="card"
     :data-card="card.name"
-    :class="{ [animationName()]: animator, [card.specialClass]: card.specialClass }"
+    :class="{ [animationName()]: animator, [className]: className }"
     :src="face || flip ? card.source : card.sourceBack" />
 </template>
 
@@ -31,11 +31,11 @@ export default {
       flip: false
     }
   },
-  // computed: {
-  //   className: function () {
-  //     return `${this.player}-indicator`
-  //   }
-  // }
+  computed: {
+    className: function () {
+      return this.card.specialClass
+    }
+  },
   methods: {
     emitCardClick(index){  
       //block play if card is not allowed
@@ -59,15 +59,18 @@ export default {
 <style>
 
 .card-holder .card{
-  transition: transform 0.3s;
+  position: relative;
   z-index: 2;
 }
-.p1-piles .card{
+.piles .card{
   position: relative;
 }
+
+/* ALLOWED / NOT ALLOWED CLASSES */
+
 .p1-hand .card{
+  transition: transform 0.3s;
   filter: contrast(70%);
-  position: relative;
 }
 .p1-hand .allowed.card{
   filter: none;
@@ -95,6 +98,9 @@ export default {
 /* THROWING FROM HAND CLASSES */
 .card.p1-hand-discard{ animation: p1-hand-discard 1s 1; }
 
+/* THROWING FROM HAND CLASSES */
+.card.burn{ animation: burn 2s 1; opacity: 0; }
+
 
 
 @keyframes p1-stack-hand {
@@ -102,13 +108,18 @@ export default {
     transform: rotateX(-90deg) rotateY(0deg) rotateZ(90deg) scale(0.8);
     opacity: 0;
     top: -40vh;
-    left: -30vw;
+    left: -190px;
   }
-  30% {  
-    transform: rotateX(32deg) rotateY(0deg) rotateZ(90deg) scale(0.8);
+  10% {  
     opacity: 1;
+    transform: rotateX(-90deg) rotateY(0deg) rotateZ(90deg) scale(0.8);
     top: -40vh;
-    left: -30vw;
+    left: -190px;
+  }
+  50% {  
+    transform: rotateX(32deg) rotateY(0deg) rotateZ(90deg) scale(0.8);
+    top: -40vh;
+    left: -190px;
   }
   100%{ 
     transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1);
@@ -119,11 +130,15 @@ export default {
 
 @keyframes p2-stack-hand {
   0%{ 
-    transform: rotateX(0deg) rotateY(20deg) rotateZ(0deg) translateX(-60vw) translateY(30vh);
+    top: 30vh;
+    left: -190px;
+    transform: rotate(90deg);
     opacity: 0;
   }
   100% {  
-    transform: rotateX(0) rotateY(0) rotateZ(0) translateX(0) translateY(0);
+    top: 0vh;
+    left: 0vw;
+    transform: rotate(0deg);
     opacity: 1; 
   }
 }
@@ -199,6 +214,19 @@ export default {
     left: 0vw;
     opacity: 1;
     transform:scale(1);
+  }
+}
+@keyframes burn {
+  0%{ 
+    filter: sepia(0);
+  }
+  80%{  
+    filter: sepia(1);
+    opacity: 1;
+  }
+  100%{  
+    filter: sepia(1);
+    opacity: 0;
   }
 }
 

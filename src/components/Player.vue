@@ -2,8 +2,9 @@
   <div class="hand-holder">
     <div :class="{ active: active }" class="play-indicator">
       <p>{{message}}</p>
-      <button v-if="player==='p1' && !canEndTurn" disabled>End Turn</button>
-      <button v-if="player==='p1' && canEndTurn" v-on:click="emitTurnEnd()">End Turn</button>
+      <button v-if="player==='p1'" v-on:click="emitTurnEnd()" :disabled="!canEndTurn">
+        {{buttonMessage}}
+      </button>
     </div>
     <div class="hand p1-hand" v-if="player==='p1'">
       <div class="card-holder" v-for="(card, index) in cards" :key="card.name">
@@ -50,11 +51,18 @@ export default {
   computed: {
     message: function () {
       if(this.player === 'p2') return 'Computer Thinking'
-      if(this.mode === 'setup') return 'Choose three cards for your three piles'
+      if(this.mode === 'setup') return 'Choose your three best cards for your three piles'
       if(this.turn.penalty) return this.turn.penalty.missTurn ? 
-          `Miss a turn or counter it with an ${this.turn.penalty.counterValue} card` : ''
+        `Miss a turn or counter it with an ${this.turn.penalty.counterValue} card` : ''
+      if(!this.turn.series.length && !this.topDiscarded) return 'Play another card'
       return this.turn.series.length ? 
-        'Continue or end turn?' : 'Play a card or take all discarded cards'
+        'Done everything?' : 'Play a card or take all discarded cards'
+    },
+    buttonMessage: function () {
+      if(this.mode === 'setup') return 'Confirm'
+      if(this.turn.penalty) if(this.turn.penalty.missTurn) return `Miss turn`
+      if(!this.turn.series.length && !this.topDiscarded) return 'End turn'
+      return this.turn.series.length ? 'End turn' : 'Take discarded'
     }
   },
   methods: {
@@ -88,10 +96,10 @@ export default {
   padding: 0 20px;
   display: flex; 
 }
-.p1-hand .card, .p1-hand .card-holder{
+.p1-hand .card, .p1-hand .card-holder, .p1-hand{
   height:120px;
 }
-.p2-hand .card, .p2-hand .card-holder{
+.p2-hand .card, .p2-hand .card-holder, .p2-hand{
   height:80px;
 }
 .hand-holder{
@@ -107,7 +115,7 @@ export default {
 }
 .play-indicator{
   opacity: 0;
-  transition: all 1s;
+  transition: all 0.2s;
   display: flex;
   flex-direction: column;
   align-items: flex-end;

@@ -8,8 +8,8 @@
     <main>
       <Player player='p2' 
         :cards="cards.p2.hand" 
-        :active="this.player==='p2'"
-        :topDiscarded="this.cards.discarded[this.cards.discarded.length-1]" />
+        :active="player==='p2'"
+        :topDiscarded="topDiscarded" />
 
       <Piles player='p2' :piles="cards.p2.piles" />
 
@@ -18,24 +18,24 @@
           :turn="turn"
           :animator="animator.stack"
           :cards="cards.stack" />
-        <Discarded :cards="cards.discarded"/>
+        <Discarded :cards="cards.discarded" :burn="isBurn"/>
       </div>
 
       <Piles player='p1' :piles="cards.p1.piles" />
 
       <Player player='p1' 
         :cards="cards.p1.hand" 
-        :active="this.player==='p1'"
+        :active="player==='p1'"
         :turn="turn"
         :canEndTurn="canEndTurn"
         :mode="mode"
-        :topDiscarded="this.cards.discarded[this.cards.discarded.length-1]"
+        :topDiscarded="topDiscarded"
         @turnEnd="handleTurnEnd"
-        @handClick="this.handleHandClick"/>
+        @handClick="handleHandClick"/>
 
     </main>
           
-    <Message :message="message" v-if="message" @clear="this.clearPopup"/>
+    <Message :message="message" v-if="message" @clear="clearPopup"/>
 
     <footer>
       <p class="copyright"><span class="name">Tom Tidswell</span> &copy; 2019 &hearts;</p>
@@ -67,6 +67,7 @@ export default {
       message: '',
       player: 'p1',
       mode: 'setup',
+      dealDelay: 0,
       url: './assets/img/cards',
       ranks: ['2','3','4','5','6','7','8','9','10','J','Q','K','ACE'],
       suits: ['H','C','D','S'],
@@ -94,24 +95,25 @@ export default {
       return collection
     },
     dealRoutine(){
+      //set the stack to be a copy of the deck
       this.cards.stack = this.deck.map(card => card)
-
+      //reset the deal delay counter
+      this.dealDelay = 0
       console.log('Dealing:',this.cards.stack.map(card=>card.name))
-
       //update this with non-hardcoded values
-      for (let index = 0; index < 3; index++) {
-        this.moveCard(0, this.cards.stack, this.cards.p2.piles.facedown, 'p2-stack-pile0')
-        this.moveCard(0, this.cards.stack, this.cards.p1.piles.facedown, 'p1-stack-pile0')
+      for (let i = 0; i < 3; i++) {
+        this.moveCardDelay(0, this.cards.stack, this.cards.p2.piles.facedown, 'p2-stack-pile0')
+        this.moveCardDelay(0, this.cards.stack, this.cards.p1.piles.facedown, 'p1-stack-pile0')
       }
-      for (let index = 0; index < 3; index++) {
-        this.moveCard(0, this.cards.stack, this.cards.p2.piles.faceup, 'p2-stack-pile0')
-        this.moveCard(0, this.cards.stack, this.cards.p1.hand, 'p1-stack-hand')
+      for (let i = 0; i < 3; i++) {
+        this.moveCardDelay(0, this.cards.stack, this.cards.p2.piles.faceup, 'p2-stack-pile0')
+        this.moveCardDelay(0, this.cards.stack, this.cards.p1.hand, 'p1-stack-hand')
       }
-      for (let index = 0; index < 3; index++) {
-        this.moveCard(0, this.cards.stack, this.cards.p2.hand, 'p2-stack-hand')
-        this.moveCard(0, this.cards.stack, this.cards.p1.hand, 'p1-stack-hand')
+      for (let i = 0; i < 3; i++) {
+        this.moveCardDelay(0, this.cards.stack, this.cards.p2.hand, 'p2-stack-hand')
+        this.moveCardDelay(0, this.cards.stack, this.cards.p1.hand, 'p1-stack-hand')
       }
-      this.moveCard(0, this.cards.stack, this.cards.discarded, '')
+      this.moveCardDelay(0, this.cards.stack, this.cards.discarded, '')
 
       // this.popup('Choose your best cards for your three piles')
     },
@@ -124,6 +126,10 @@ export default {
     sortHumanHand(){
       this.cards.p1.hand.sort((a, b) => a.runValue - b.runValue )
     },
+    moveCardDelay(indexOfCard, from, to, specialClass = ''){
+      this.dealDelay += 100
+      setTimeout(()=>this.moveCard(indexOfCard, from, to, specialClass), this.dealDelay)
+    },
     moveCard(indexOfCard, from, to, specialClass = ''){
       const card = from[indexOfCard]
       //remove it from the old array
@@ -133,32 +139,38 @@ export default {
       //add the card to the new array      
       to.push(card)
     },
-    handleTurnEnd(){
-      //some aliases to make the code more readable
-      const playerHand = this.cards[this.player].hand
+    handleBurn(){
+      console.log('BURN LOGIC INITIATED', this.topDiscarded.name)
+      this.turn.series = []
+      while (this.cards.discarded.length) this.cards.discarded.shift()
+      console.log('BURN LOGIC complete', this.turn.series.length , this.topDiscarded)
+    },
+    fillHand(player){
       //deal any cards required
-      for (let i = playerHand.length; i < 3; i++) {
-        this.moveCard(0, this.cards.stack, playerHand, `${this.player}-stack-hand`)
+      for (let i = this.cards[player].hand.length; i < 3; i++) {
+        this.moveCard(0, this.cards.stack, this.cards[player].hand, `${this.player}-stack-hand`)
       }
+    },
+    handleTurnEnd(){
+      //deal any cards required
+      this.fillHand(this.player)
       
       //if no cards were played, and the player wasnt supposed to miss a turn, then move all cards from the discard pile to the players hand
       if(this.turn.series.length === 0 && !this.turn.penalty)
-        while (this.cards.discarded.length) {
-          this.moveCard(0, this.cards.discarded, playerHand, `${this.player}-discard-hand`)
-        }
+        while (this.cards.discarded.length)
+          this.moveCard(0, this.cards.discarded, this.cards[this.player].hand, `${this.player}-discard-hand`)
 
+      //start the next turn
+      this.handleTurnStart()
+    },
+    handleTurnStart(){
       //switch player
       this.player = this.player === 'p1' ? 'p2' : 'p1'
-
       //update the turn data
       this.turn.penalty = is.penaltyDue(this.cards.discarded, this.turn.penalty)
       this.turn.series = []
-
       //begin the computer player's turn
       setTimeout(() => this.handleComputerTurn(), 2000)
-      // if(this.player === 'p2')
-      //   setTimeout(() => this.handleTurnEnd(), 2000)
-      
     },
     handleHandClick(cardPlayed, indexOfCard){
       //some aliases to make the code more readable
@@ -178,8 +190,11 @@ export default {
           this.turn.series.unshift(cardPlayed)
           //add the card to the discard pile and remove it from the hand
           this.moveCard(indexOfCard, p1hand, this.cards.discarded, 'p1-hand-discard')
-          //check for a win
-          if(!p1hand.length) console.log(this.player, 'wins')
+          //work out if this triggered a burn, if it did, start burn logic (clear discarded and the series)
+          if(this.isBurn){
+            this.fillHand(this.player)
+            setTimeout(()=>this.handleBurn(), 2000)
+          }
           break
       }
     },
@@ -187,43 +202,35 @@ export default {
       //prevent automating the human's turn!
       if(this.player === 'p1') return
 
+      //some aliases to make the code more readable
+      const playerHand = this.cards[this.player].hand
       const topDiscarded = this.cards.discarded[this.cards.discarded.length-1]
-      const playableCards = this.cards[this.player].hand.filter(card=>is.validMove(card, this.turn, topDiscarded, this.mode))
-      const firstIndexPlayable = this.cards[this.player].hand.indexOf(playableCards[0])
-      // const firstPlayable = playableCards[0]
-      //output the comp cards
-      console.log('Cards', this.cards[this.player].hand.map(card=>card.name), playableCards, firstIndexPlayable)
-      console.log('Playable cards:', playableCards, firstIndexPlayable)
-      console.log('Penalty and pick', this.turn.penalty)
-      
+      const playableCards = playerHand.filter(card=>is.validMove(card, this.turn, topDiscarded, this.mode))
+      const firstIndexPlayable = playerHand.indexOf(playableCards[0])
 
-      //if there are no playable cards, and no penalty, pick up a card
-      if(playableCards.length === 0 && !this.turn.penalty) {
-        console.log('attempting to pick single card')
-        this.cards[this.player].hand.push(this.cards.stack.pop())
-      }
-      
-      //if there are no playable cards and a penalty, pick the number of cards from the penalty
-      else if (playableCards.length === 0 && this.turn.penalty){
-        console.log('attempting to pick up cards')
-        while (this.turn.penalty.pick) {
-          this.cards[this.player].hand.push(this.cards.stack.pop())
-          this.turn.penalty.pick--
-        }
-      }
+      //output the comp cards
+      // console.log('Cards at start', playerHand.map(card=>card.name))
+      // console.log('Playable:', playableCards.map(card=>card.name), firstIndexPlayable)
+      // console.log('Penalty due:', this.turn.penalty)
       
       //choose the first card the computer can play, and play it
-      else {
-        console.log('attempting to play a card')
-        //add the card to the discard pile
-        this.cards.discarded.push(this.cards[this.player].hand[firstIndexPlayable])
-        //remove it from the hand
-        this.cards[this.player].hand.splice(firstIndexPlayable,1)
-      } 
+      if(playableCards.length) {
+        //add it to the series of cards which have been played
+        this.turn.series.unshift(playerHand[firstIndexPlayable])
+        //add the card to the discard pile and remove it from the hand
+        this.moveCard(firstIndexPlayable, playerHand, this.cards.discarded, 'p2-hand-discard')
+      }
 
-      console.log('results in:', this.cards.discarded, this.cards[this.player].hand )
+      // console.log('Cards at end:', playerHand.map(card=>card.name))
       
-      this.handleTurnEnd()
+      //trigger the end of the turn, or trigger burning and start the turn again
+      if(this.isBurn){
+        this.fillHand(this.player)
+        setTimeout(()=>this.handleBurn(), 2000)
+        setTimeout(()=>this.handleComputerTurn(), 3000)
+      } else {
+        this.handleTurnEnd()
+      }
     }
   },
   computed: {
@@ -242,7 +249,19 @@ export default {
       return this.shuffle(all)
     },
     canEndTurn: function () {
-      return this.mode !== 'setup'
+      if(this.mode === 'setup') return false
+      if(!this.turn.series.length && !this.topDiscarded) return false
+      return true
+    },
+    topDiscarded: function () {
+      //TODO: enhance this to include throwing four of the same card down in a row
+      const disc = this.cards.discarded
+      return disc.length ? disc[disc.length-1] : null
+    },
+    isBurn: function () {
+      //TODO: enhance this to include throwing four of the same card down in a row
+      const disc = this.cards.discarded
+      return disc.length ? disc[disc.length-1].value === '10' : false
     }
   },
   created: function () {
