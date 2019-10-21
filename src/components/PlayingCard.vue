@@ -1,14 +1,8 @@
 <template>
-  <img v-if="interactive"
+  <img class="card"
     v-on:click="emitCardClick(index)"
-    class="card"
     :data-card="card.name"
-    :src="face ? card.source : card.sourceBack"
-    :class="{ allowed: canBePlayed, [className]: className }" />
-  <img v-else
-    class="card"
-    :data-card="card.name"
-    :class="{ [animationName()]: animator, [className]: className }"
+    :class="{ allowed: canBePlayed, [className]: className }"
     :src="face || flip ? card.source : card.sourceBack" />
 </template>
 
@@ -38,18 +32,19 @@ export default {
   },
   methods: {
     emitCardClick(index){  
+      console.log('Interactive:', this.interactive, 'Can be played:', this.canBePlayed)
+      //block play if card is not allowed
+      if (!this.interactive) return
       //block play if card is not allowed
       if (!this.canBePlayed) return
-      //set the animation
-      // this.animate = true
       //emit the event
       this.$emit('cardClick', this.card, index)
     },
     animationName(){
-      if(this.animator){
-        if(this.animator.flag === 'flip') setTimeout(()=> this.flip = true, this.animator.timeout)
-      }
-      return this.animator ? this.animator.animation : null
+      // if(this.animator){
+      //   if(this.animator.flag === 'flip') setTimeout(()=> this.flip = true, this.animator.timeout)
+      // }
+      // return this.animator ? this.animator.animation : null
     }
   }
 }
@@ -84,21 +79,26 @@ export default {
 .card.p1-stack-hand{ animation: p1-stack-hand 1s 1; }
 .card.p2-stack-hand{ animation: p2-stack-hand 1s 1; }
 
-/* PUTTING ONTO PILE CLASSES */
+/* HAND -> PILE CLASSES */
 .card.p1-hand-pile0{ animation: p1-hand-pile0 1s 1; }
 .card.p1-hand-pile1{ animation: p1-hand-pile1 1s 1; }
 .card.p1-hand-pile2{ animation: p1-hand-pile2 1s 1; }
 
-/* PICKING DISCARD INTO HAND CLASSES */
+/* PILE -> DISCARD CLASSES */
+.card.p1-pile0-discard{ animation: p1-pile0-discard 1s 1; }
+.card.p1-pile1-discard{ animation: p1-pile1-discard 1s 1; }
+.card.p1-pile2-discard{ animation: p1-pile2-discard 1s 1; }
+
+/* DISCARD -> HAND CLASSES */
 
 .card.p1-discard-hand{ animation: p1-discard-hand 1s 1; }
 .card.p2-discard-hand{ animation: p2-discard-hand 1s 1; }
 
 
-/* THROWING FROM HAND CLASSES */
+/* HAND -> DISCARD CLASSES */
 .card.p1-hand-discard{ animation: p1-hand-discard 1s 1; }
 
-/* THROWING FROM HAND CLASSES */
+/* BURN CARDS */
 .card.burn{ animation: burn 2s 1; opacity: 0; }
 
 
@@ -182,6 +182,42 @@ export default {
   from{ 
     top: 20vh;
     left: 0vw;
+    opacity: 0;
+  }
+  to{  
+    top: 0vh;
+    left: 0vw;
+    opacity: 1; 
+  }
+}
+@keyframes p1-pile0-discard {
+  from{ 
+    top: 20vh;
+    left: -20vw;
+    opacity: 0;
+  }
+  to{  
+    top: 0vh;
+    left: 0vw;
+    opacity: 1; 
+  }
+}
+@keyframes p1-pile1-discard {
+  from{ 
+    top: 20vh;
+    left: -100px;
+    opacity: 0;
+  }
+  to{  
+    top: 0vh;
+    left: -30px;
+    opacity: 1; 
+  }
+}
+@keyframes p1-pile2-discard {
+  from{ 
+    top: 20vh;
+    left: 30px;
     opacity: 0;
   }
   to{  

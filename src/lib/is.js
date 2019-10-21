@@ -5,7 +5,7 @@ const is = {
   set: function (a, b) {
     return a.value === b.value
   },
-  allowedFirst: function (prev, curr, penalty, mode) {
+  validFirst: function (prev, curr, penalty, mode) {
     //if the game is in setup mode, allow any card to be played
     if(mode === 'setup') return true
     //if there is no previous card, allow any card to be played
@@ -23,11 +23,19 @@ const is = {
 
     return false
   },
-  validMove(card, turn, topDiscarded, mode){
+  validFollowup: function (prev, curr) {
+    //if there is no previous card, allow any card to be played
+    if(!prev) return true
+    //allow a two, eight and ten to be played on any card
+    if(prev.value === '2') return true
+    //logic to make sure the card rank is greater than or equal to the previous card rank
+    return is.set(prev, curr)
+  },
+  validMove(prev, curr, turn, mode){
     //if there were no previous plays, only allow a valid move
-    if (!turn.series.length) return is.allowedFirst(topDiscarded, card, turn.penalty, mode)
-    //when there was a previous card played, allow it if it is part of a set
-    return is.set(turn.series[0], card)
+    return (turn.series.length) ?
+      is.validFollowup(prev, curr) :
+      is.validFirst(prev, curr, turn.penalty, mode)
   },
   penaltyDue: function (discarded, prevPenalty) {
     let penalty = null
